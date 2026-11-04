@@ -24,10 +24,11 @@ Do not connect this app to AVI or any other app's Supabase project. Never put a 
 
 ## Local setup
 
-Requirements: Node.js 20.19+ and npm.
+Requirements: Node.js 20.19+ and npm 11.6+ (the CI pins npm 11.19.1 to avoid an npm 10 dependency-tree resolver bug).
 
     git clone https://github.com/pdotgowtham-prog/meena-s-nest.git
     cd meena-s-nest
+    npm install --global npm@11.19.1
     npm install
     cp .env.example .env
     npm run dev

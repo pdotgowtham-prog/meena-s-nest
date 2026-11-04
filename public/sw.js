@@ -19,6 +19,8 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
+  // Never cache invite links or any URL carrying query parameters (tokens are credentials).
+  if (url.search) return;
   if (url.pathname.startsWith("/auth/") || url.pathname.startsWith("/rest/")) return;
   event.respondWith(
     fetch(request).then((response) => {
