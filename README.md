@@ -29,7 +29,7 @@ Requirements: Node.js 20.19+ and npm 11.6+ (the CI pins npm 11.19.1 to avoid an 
     git clone https://github.com/pdotgowtham-prog/meena-s-nest.git
     cd meena-s-nest
     npm install --global npm@11.19.1
-    npm install
+    npm ci
     cp .env.example .env
     npm run dev
 

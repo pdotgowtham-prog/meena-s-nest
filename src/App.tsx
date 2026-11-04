@@ -52,7 +52,7 @@ function AuthScreen() {
     setNotice("");
     try {
       if (mode === "signup") {
-        const { data, error: authError } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.password });
+        const { data, error: authError } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.password, options: { emailRedirectTo: window.location.href } });
         if (authError) throw authError;
         setNotice(data.session ? "Your account is ready. Set up your shared space next." : "Check your email to confirm your account, then return here to sign in.");
       } else {
@@ -234,9 +234,10 @@ function Dashboard({ workspace, profile, userId, onProfileSaved, onNavigate }: {
 
     {!profile?.lmp_date && <ProfileForm workspaceId={workspace.id} userId={userId} profile={profile} onSaved={onProfileSaved}/>}
     {profile?.lmp_date && <section className="grid gap-4 md:grid-cols-[.8fr_1.2fr]">
-      <div className="card flex items-center gap-4 p-5">
+      <div className="card flex items-center gap-3 p-4">
         <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-[#F4EBDD]"><span className="serif text-2xl text-[#76583C]">{week || "—"}</span></div>
-        <div><p className="text-xs text-[#8B6B4A]">This week's guide</p><h2 className="serif text-xl text-[#493628]">About a {sizeGuide}</h2><p className="mt-1 text-xs text-[#806D59]">General guide, not medical advice.</p></div>
+        <Illustration kind="fruit" week={week} className="h-20 w-24 shrink-0"/>
+        <div className="min-w-0"><p className="text-xs text-[#8B6B4A]">This week's guide</p><h2 className="serif text-xl text-[#493628]">About a {sizeGuide}</h2><p className="mt-1 text-xs text-[#806D59]">General guide, not medical advice.</p></div>
       </div>
       <div className="card p-5">
         <div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#8B6B4A]">Little milestones</p><h2 className="serif mt-1 text-xl text-[#493628]">Look how far you've come</h2></div><Sparkles className="text-[#B88942]"/></div>
