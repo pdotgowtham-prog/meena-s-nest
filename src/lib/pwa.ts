@@ -1,3 +1,9 @@
 export async function requestAppInstallHelp(): Promise<boolean> {
-  return "serviceWorker" in navigator && navigator.serviceWorker.ready.then(() => true).catch(() => false);
+  if (!("serviceWorker" in navigator)) return false;
+  try {
+    await navigator.serviceWorker.ready;
+    return true;
+  } catch {
+    return false;
+  }
 }

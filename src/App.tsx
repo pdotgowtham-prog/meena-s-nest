@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { APP_NAME, ALLOWED_DOCUMENT_TYPES, MAX_UPLOAD_BYTES, VAULT_BUCKET } from "./constants/app";
 import { supabase } from "./lib/supabase";
-import { addDaysToDateOnly, formatCurrency, formatDate, localToday } from "./lib/date";
+import { formatCurrency, formatDate, localToday } from "./lib/date";
 import { calculateEdd, calculateGestationalAge, daysUntilDue, trimesterForWeek } from "./lib/pregnancy";
 import { expenseSchema, inviteSchema, profileSchema, workspaceSchema } from "./lib/validation";
 import { EmptyState, Illustration } from "./components/Illustration";
@@ -311,7 +311,7 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
     </form>
     <section className="card p-5">
       <div className="mb-3 flex items-center justify-between"><h2 className="serif text-xl text-[#493628]">Recent expenses</h2><span className="text-xs text-[#8A7762]">{rows.length} records</span></div>
-      {!loaded ? <p className="py-8 text-center text-sm text-[#806D59]">Loading expenses…</p> : rows.length === 0 ? <EmptyState title="A fresh page" body="Expenses you add will appear here, shared with your partner."/> : <div className="divide-y divide-[#EEE5DA]">{rows.map((row) => <div className="flex items-center gap-3 py-3" key={row.id}><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#8B6B4A]"><ReceiptText size={18}/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold capitalize text-[#493628]">{row.merchant || row.category.replaceAll("_"," ")}</p><p className="text-xs text-[#8A7762]">{formatDate(row.expense_date)}{row.description ? " · " + row.description : ""}</p></div><div className="text-right"><p className="text-sm font-semibold text-[#493628]">{formatCurrency(Number(row.amount))}</p><button onClick={() => void softDelete(row.id)} className="text-xs text-[#9B7865] underline">Undo by refreshing if mistaken?</button></div></div>)}</div>}
+      {!loaded ? <p className="py-8 text-center text-sm text-[#806D59]">Loading expenses…</p> : rows.length === 0 ? <EmptyState title="A fresh page" body="Expenses you add will appear here, shared with your partner."/> : <div className="divide-y divide-[#EEE5DA]">{rows.map((row) => <div className="flex items-center gap-3 py-3" key={row.id}><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#8B6B4A]"><ReceiptText size={18}/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold capitalize text-[#493628]">{row.merchant || row.category.replaceAll("_"," ")}</p><p className="text-xs text-[#8A7762]">{formatDate(row.expense_date)}{row.description ? " · " + row.description : ""}</p></div><div className="text-right"><p className="text-sm font-semibold text-[#493628]">{formatCurrency(Number(row.amount))}</p><button onClick={() => void softDelete(row.id)} className="text-xs text-[#9B7865] underline">Remove</button></div></div>)}</div>}
     </section>
   </div>;
 }
