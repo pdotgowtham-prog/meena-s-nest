@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #FBF6EE;
+  --color-twig: #8B6B4A;
+  --color-sage: #A8B99A;
+  --color-blush: #F2C9C0;
+  --color-gold: #E3B565;
+  --color-night: #1F2A44;
+  --font-heading: "Fraunces", Georgia, serif;
+  --font-body: "DM Sans", Arial, sans-serif;
+}
+
+:root { color-scheme: light; font-family: "DM Sans", Arial, sans-serif; background: #FBF6EE; color: #392F27; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: #FBF6EE; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+::selection { background: #E7C7A5; color: #2F261F; }
+.serif { font-family: "Fraunces", Georgia, serif; }
+.paper { background-color: rgba(255,255,255,.78); background-image: radial-gradient(rgba(139,107,74,.055) .65px, transparent .65px); background-size: 7px 7px; }
+.soft-shadow { box-shadow: 0 14px 42px rgba(76, 59, 42, .08); }
+.input { width:100%; border:1px solid #E5D9C9; border-radius:14px; background:#FFFCF7; color:#392F27; padding:12px 14px; outline:none; }
+.input:focus { border-color:#8B6B4A; box-shadow:0 0 0 3px rgba(139,107,74,.13); }
+.btn-primary { border-radius:999px; background:#6F5238; color:white; padding:12px 18px; font-weight:600; transition:transform .15s,background .15s; }
+.btn-primary:hover { background:#563E2B; transform:translateY(-1px); }
+.btn-secondary { border:1px solid #DCCDBB; border-radius:999px; color:#654B35; padding:10px 16px; background:#FFFCF7; font-weight:600; }
+.field-label { display:block; margin-bottom:6px; color:#67533F; font-size:13px; font-weight:600; }
+.card { border:1px solid #EDE3D6; border-radius:24px; background:rgba(255,255,255,.82); box-shadow:0 10px 32px rgba(76,59,42,.045); }
+.bottom-safe { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+@keyframes sway { 0%,100% { transform:rotate(-1deg); } 50% { transform:rotate(1deg); } }
+@keyframes floaty { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-4px); } }
+@keyframes glow { 0%,100% { opacity:.5; } 50% { opacity:1; } }
+.nest-sway { transform-origin:50% 80%; animation:sway 5s ease-in-out infinite; }
+.nest-float { animation:floaty 4s ease-in-out infinite; }
+.egg-glow { animation:glow 3s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}

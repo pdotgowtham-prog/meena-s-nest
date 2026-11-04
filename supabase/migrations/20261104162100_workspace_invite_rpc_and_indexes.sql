@@ -1,0 +1,21 @@
+drop policy if exists workspace_members_insert_owner_self on public.workspace_members;
+create policy workspace_members_insert_owner_self on public.workspace_members for insert to authenticated
+with check(user_id=(select auth.uid()) and created_by=(select auth.uid()) and role='owner' and exists(select 1 from public.workspaces w where w.id=workspace_id and w.owner_user_id=(select auth.uid())));
+create or replace function public.accept_workspace_invite(p_token text) returns uuid language sql security invoker set search_path = '' as $$ select private.accept_workspace_invite(p_token); $$;
+revoke all on function public.accept_workspace_invite(text) from public,anon;
+grant execute on function public.accept_workspace_invite(text) to authenticated;
+create index workspaces_owner_user_id_idx on public.workspaces(owner_user_id);
+create index workspaces_created_by_idx on public.workspaces(created_by);
+create index workspace_members_user_id_idx on public.workspace_members(user_id);
+create index workspace_members_created_by_idx on public.workspace_members(created_by);
+create index workspace_invites_workspace_id_idx on public.workspace_invites(workspace_id);
+create index workspace_invites_invited_by_idx on public.workspace_invites(invited_by);
+create index workspace_invites_created_by_idx on public.workspace_invites(created_by);
+create index pregnancy_profiles_created_by_idx on public.pregnancy_profiles(created_by);
+create index vault_documents_workspace_id_idx on public.vault_documents(workspace_id);
+create index vault_documents_created_by_idx on public.vault_documents(created_by);
+create index expenses_workspace_id_idx on public.expenses(workspace_id);
+create index expenses_created_by_idx on public.expenses(created_by);
+create index expenses_document_workspace_idx on public.expenses(document_id,workspace_id);
+create index expenses_workspace_date_idx on public.expenses(workspace_id,expense_date desc) where deleted_at is null;
+create index vault_documents_workspace_created_idx on public.vault_documents(workspace_id,created_at desc) where deleted_at is null;

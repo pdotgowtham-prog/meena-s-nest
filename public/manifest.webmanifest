@@ -1,0 +1,13 @@
+{
+  "name": "Pregnancy Journal",
+  "short_name": "Nest",
+  "description": "A private space for a growing family.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FBF6EE",
+  "theme_color": "#FBF6EE",
+  "icons": [
+    { "src": "/nest-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
