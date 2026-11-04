@@ -77,15 +77,15 @@ function AuthScreen() {
           <p className="mt-4 max-w-sm text-sm leading-7 text-[#735E49]">A calm, private place to keep your pregnancy journey organised, together.</p>
         </div>
         <Illustration kind="nest" week={18} className="mx-auto mt-6 w-full max-w-[300px]" />
-        <p className="text-xs text-[#806D59]">One shared space. Two partners. A thousand little moments.</p>
+        <p className="text-xs text-[#735E49]">One shared space. Two partners. A thousand little moments.</p>
       </div>
       <div className="p-7 md:p-10">
         <div className="mb-7 flex gap-2 rounded-full bg-[#F5EFE6] p-1">
-          <button type="button" onClick={() => setMode("login")} className={"flex-1 rounded-full px-4 py-2 text-sm font-semibold " + (mode === "login" ? "bg-white text-[#583F2B] shadow-sm" : "text-[#806D59]")}>Sign in</button>
-          <button type="button" onClick={() => setMode("signup")} className={"flex-1 rounded-full px-4 py-2 text-sm font-semibold " + (mode === "signup" ? "bg-white text-[#583F2B] shadow-sm" : "text-[#806D59]")}>Create account</button>
+          <button type="button" onClick={() => setMode("login")} className={"flex-1 rounded-full px-4 py-2 text-sm font-semibold " + (mode === "login" ? "bg-white text-[#583F2B] shadow-sm" : "text-[#735E49]")}>Sign in</button>
+          <button type="button" onClick={() => setMode("signup")} className={"flex-1 rounded-full px-4 py-2 text-sm font-semibold " + (mode === "signup" ? "bg-white text-[#583F2B] shadow-sm" : "text-[#735E49]")}>Create account</button>
         </div>
         <h2 className="serif text-3xl text-[#493628]">{mode === "login" ? "Welcome back" : "Begin your little journey"}</h2>
-        <p className="mt-2 text-sm leading-6 text-[#806D59]">{mode === "login" ? "Sign in to return to your shared space." : "Create your account first. You can invite your partner after setup."}</p>
+        <p className="mt-2 text-sm leading-6 text-[#735E49]">{mode === "login" ? "Sign in to return to your shared space." : "Create your account first. You can invite your partner after setup."}</p>
         <form className="mt-7 space-y-4" onSubmit={submit}>
           <label className="block"><span className="field-label">Email address</span><input className="input" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com"/></label>
           <label className="block"><span className="field-label">Password</span><input className="input" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters"/></label>
@@ -93,7 +93,7 @@ function AuthScreen() {
           {notice && <p role="status" className="rounded-xl bg-[#E8F0E4] px-3 py-2 text-sm text-[#405A3B]">{notice}</p>}
           <button disabled={busy} className="btn-primary flex w-full items-center justify-center gap-2" type="submit">{busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"} <ArrowRight size={16}/></button>
         </form>
-        <p className="mt-6 text-xs leading-5 text-[#8A7762]"><ShieldCheck size={13} className="mr-1 inline"/> Your pregnancy records are stored in a private workspace, not in this public source-code repository.</p>
+        <p className="mt-6 text-xs leading-5 text-[#735E49]"><ShieldCheck size={13} className="mr-1 inline"/> Your pregnancy records are stored in a private workspace, not in this public source-code repository.</p>
       </div>
     </section>
   </main>;
@@ -118,15 +118,15 @@ function WorkspaceSetup({ userId, onCreated }: { userId: string; onCreated: () =
   return <main className="flex min-h-screen items-center justify-center px-4 py-10">
     <section className="card paper w-full max-w-xl p-7 md:p-10">
       <Illustration kind="nest" week={4} className="mx-auto mb-2 h-40"/>
-      <p className="text-center text-xs font-semibold uppercase tracking-[.18em] text-[#8B6B4A]">A shared beginning</p>
+      <p className="text-center text-xs font-semibold uppercase tracking-[.18em] text-[#735E49]">A shared beginning</p>
       <h1 className="serif mt-2 text-center text-3xl text-[#493628]">Make a little room for both of you</h1>
-      <p className="mx-auto mt-3 max-w-md text-center text-sm leading-6 text-[#806D59]">Create one private workspace. Your partner can join using an invitation link after they create or sign in to their account.</p>
+      <p className="mx-auto mt-3 max-w-md text-center text-sm leading-6 text-[#735E49]">Create one private workspace. Your partner can join using an invitation link after they create or sign in to their account.</p>
       <form onSubmit={submit} className="mt-7 space-y-3">
         <label className="block"><span className="field-label">Workspace name</span><input className="input" maxLength={80} value={name} onChange={(event) => setName(event.target.value)}/></label>
         {error && <p role="alert" className="text-sm text-red-800">{error}</p>}
         <button className="btn-primary w-full" disabled={busy} type="submit">{busy ? "Creating your space…" : "Create private workspace"}</button>
       </form>
-      <p className="mt-4 text-center text-xs text-[#8A7762]">Signed in as {userId ? "your account" : "—"}</p>
+      <p className="mt-4 text-center text-xs text-[#735E49]">Signed in as {userId ? "your account" : "—"}</p>
     </section>
   </main>;
 }
@@ -176,8 +176,8 @@ function ProfileForm({ workspaceId, userId, profile, onSaved }: { workspaceId: s
 
   return <form onSubmit={submit} className="card p-5 md:p-6">
     <div className="mb-4 flex items-start justify-between gap-3">
-      <div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#8B6B4A]">Pregnancy profile</p><h2 className="serif mt-1 text-2xl text-[#493628]">{profile ? "Your journey details" : "Add your first details"}</h2></div>
-      <span className="rounded-full bg-[#F4EBDD] p-2 text-[#8B6B4A]"><Baby size={20}/></span>
+      <div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">Pregnancy profile</p><h2 className="serif mt-1 text-2xl text-[#493628]">{profile ? "Your journey details" : "Add your first details"}</h2></div>
+      <span className="rounded-full bg-[#F4EBDD] p-2 text-[#735E49]"><Baby size={20}/></span>
     </div>
     <div className="grid gap-4 sm:grid-cols-2">
       <label><span className="field-label">Last menstrual period (LMP)</span><input className="input" type="date" value={lmp} onChange={(event) => updateLmp(event.target.value)}/></label>
@@ -185,7 +185,7 @@ function ProfileForm({ workspaceId, userId, profile, onSaved }: { workspaceId: s
       <label><span className="field-label">Baby's name (editable)</span><input className="input" maxLength={80} value={babyName} onChange={(event) => setBabyName(event.target.value)} placeholder="A name you are thinking of…"/></label>
       <label className="sm:col-span-2"><span className="field-label">Private notes (optional)</span><textarea className="input min-h-20 resize-y" maxLength={4000} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Anything you'd like to remember…"/></label>
     </div>
-    <p className="mt-3 text-xs leading-5 text-[#8A7762]">EDD is pre-filled as 280 days after LMP. Your clinician's confirmed date can be entered manually. This is a date calculation, not medical advice.</p>
+    <p className="mt-3 text-xs leading-5 text-[#735E49]">EDD is pre-filled as 280 days after LMP. Your clinician's confirmed date can be entered manually. This is a date calculation, not medical advice.</p>
     {error && <p role="alert" className="mt-3 text-sm text-red-800">{error}</p>}
     {saved && <p role="status" className="mt-3 text-sm text-[#48623F]"><Check size={14} className="mr-1 inline"/> Saved to your private workspace.</p>}
     <button className="btn-primary mt-4" disabled={busy} type="submit">{busy ? "Saving…" : "Save pregnancy profile"}</button>
@@ -211,8 +211,8 @@ function Dashboard({ workspace, profile, userId, onProfileSaved, onNavigate }: {
     <section className="grid gap-4 lg:grid-cols-[1.2fr_.8fr]">
       <div className="card paper relative overflow-hidden p-6 md:p-8">
         <div className="relative z-10 max-w-lg">
-          <p className="text-xs font-semibold uppercase tracking-[.17em] text-[#8B6B4A]">Your shared little world</p>
-          <h1 className="serif mt-2 text-3xl leading-tight text-[#493628] md:text-4xl">A little more love, <span className="italic text-[#8B6B4A]">every day.</span></h1>
+          <p className="text-xs font-semibold uppercase tracking-[.17em] text-[#735E49]">Your shared little world</p>
+          <h1 className="serif mt-2 text-3xl leading-tight text-[#493628] md:text-4xl">A little more love, <span className="italic text-[#735E49]">every day.</span></h1>
           <p className="mt-3 max-w-md text-sm leading-6 text-[#75624F]">{profile?.baby_name ? "A cosy place for " + profile.baby_name + "'s journey and all the moments around it." : "Keep the dates, documents and little milestones of this journey together."}</p>
           {age && <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-sm font-semibold text-[#5B4632]"><Sparkles size={15} className="text-[#B88942]"/> Week {age.weeks} + {age.days} days</div>}
           {!age && <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-sm font-semibold text-[#5B4632]"><Heart size={15}/> Your journey starts here</div>}
@@ -221,9 +221,9 @@ function Dashboard({ workspace, profile, userId, onProfileSaved, onNavigate }: {
       </div>
       <div className="card flex flex-col justify-between p-5 md:p-6">
         <div>
-          <div className="flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#8B6B4A]">Due date</p><CalendarDays size={19} className="text-[#8B6B4A]"/></div>
+          <div className="flex items-center justify-between"><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">Due date</p><CalendarDays size={19} className="text-[#735E49]"/></div>
           <p className="serif mt-4 text-3xl text-[#493628]">{formatDate(profile?.due_date)}</p>
-          <p className="mt-2 text-sm text-[#806D59]">{dueDays === null ? "Add your LMP or EDD to see the countdown." : dueDays >= 0 ? dueDays + " days to go, one day at a time." : Math.abs(dueDays) + " days since the estimated date."}</p>
+          <p className="mt-2 text-sm text-[#735E49]">{dueDays === null ? "Add your LMP or EDD to see the countdown." : dueDays >= 0 ? dueDays + " days to go, one day at a time." : Math.abs(dueDays) + " days since the estimated date."}</p>
         </div>
         <div className="mt-5 rounded-2xl bg-[#F5EFE6] p-3">
           <div className="flex items-center justify-between text-xs text-[#705A43]"><span>Trimester {trimester}</span><span>{age ? "Week " + week : "Not calculated"}</span></div>
@@ -237,22 +237,22 @@ function Dashboard({ workspace, profile, userId, onProfileSaved, onNavigate }: {
       <div className="card flex items-center gap-3 p-4">
         <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-[#F4EBDD]"><span className="serif text-2xl text-[#76583C]">{week || "—"}</span></div>
         <Illustration kind="fruit" week={week} className="h-20 w-24 shrink-0"/>
-        <div className="min-w-0"><p className="text-xs text-[#8B6B4A]">This week's guide</p><h2 className="serif text-xl text-[#493628]">About a {sizeGuide}</h2><p className="mt-1 text-xs text-[#806D59]">General guide, not medical advice.</p></div>
+        <div className="min-w-0"><p className="text-xs text-[#735E49]">This week's guide</p><h2 className="serif text-xl text-[#493628]">About a {sizeGuide}</h2><p className="mt-1 text-xs text-[#735E49]">General guide, not medical advice.</p></div>
       </div>
       <div className="card p-5">
-        <div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#8B6B4A]">Little milestones</p><h2 className="serif mt-1 text-xl text-[#493628]">Look how far you've come</h2></div><Sparkles className="text-[#B88942]"/></div>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">{milestones.map((item) => <div key={item.label} className={"rounded-xl px-3 py-3 text-center text-xs font-semibold " + (item.active ? "bg-[#E8EFE4] text-[#405A3B]" : "bg-[#F5EFE6] text-[#9A8A77]")}><span className="block mb-1">{item.active ? "✦" : "○"}</span>{item.label}</div>)}</div>
+        <div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">Little milestones</p><h2 className="serif mt-1 text-xl text-[#493628]">Look how far you've come</h2></div><Sparkles className="text-[#B88942]"/></div>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">{milestones.map((item) => <div key={item.label} className={"rounded-xl px-3 py-3 text-center text-xs font-semibold " + (item.active ? "bg-[#E8EFE4] text-[#405A3B]" : "bg-[#F5EFE6] text-[#735E49]")}><span className="block mb-1">{item.active ? "✦" : "○"}</span>{item.label}</div>)}</div>
       </div>
     </section>}
     {profile && <details className="card p-5">
-      <summary className="flex cursor-pointer list-none items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#8B6B4A]">Profile settings</p><h2 className="serif mt-1 text-xl text-[#493628]">Edit journey details</h2></div><ChevronRight size={18} className="text-[#8B6B4A]"/></summary>
+      <summary className="flex cursor-pointer list-none items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">Profile settings</p><h2 className="serif mt-1 text-xl text-[#493628]">Edit journey details</h2></div><ChevronRight size={18} className="text-[#735E49]"/></summary>
       <div className="mt-5"><ProfileForm workspaceId={workspace.id} userId={userId} profile={profile} onSaved={onProfileSaved}/></div>
     </details>}
     <section className="grid gap-4 sm:grid-cols-2">
-      <button onClick={() => onNavigate("expenses")} className="card flex items-center gap-4 p-5 text-left transition hover:-translate-y-0.5"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#F7E8E3] text-[#986A5B]"><Wallet size={22}/></span><span className="flex-1"><strong className="block text-[#493628]">Pregnancy expenses</strong><span className="text-sm text-[#806D59]">Keep the little costs organised</span></span><ArrowRight size={17}/></button>
-      <button onClick={() => onNavigate("vault")} className="card flex items-center gap-4 p-5 text-left transition hover:-translate-y-0.5"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#E8EFE4] text-[#58704F]"><FileText size={22}/></span><span className="flex-1"><strong className="block text-[#493628]">Private document vault</strong><span className="text-sm text-[#806D59]">Keep reports in one safe place</span></span><ArrowRight size={17}/></button>
+      <button onClick={() => onNavigate("expenses")} className="card flex items-center gap-4 p-5 text-left transition hover:-translate-y-0.5"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#F7E8E3] text-[#986A5B]"><Wallet size={22}/></span><span className="flex-1"><strong className="block text-[#493628]">Pregnancy expenses</strong><span className="text-sm text-[#735E49]">Keep the little costs organised</span></span><ArrowRight size={17}/></button>
+      <button onClick={() => onNavigate("vault")} className="card flex items-center gap-4 p-5 text-left transition hover:-translate-y-0.5"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#E8EFE4] text-[#58704F]"><FileText size={22}/></span><span className="flex-1"><strong className="block text-[#493628]">Private document vault</strong><span className="text-sm text-[#735E49]">Keep reports in one safe place</span></span><ArrowRight size={17}/></button>
     </section>
-    <p className="text-center text-xs text-[#9A8A77]">Space: {workspace.name} · Shared only with authorised members</p>
+    <p className="text-center text-xs text-[#735E49]">Space: {workspace.name} · Shared only with authorised members</p>
   </div>;
 }
 
@@ -308,10 +308,10 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
 
   const total = rows.reduce((sum, row) => sum + Number(row.amount), 0);
   return <div className="space-y-5">
-    <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#8B6B4A]">The practical little things</p><h1 className="serif mt-1 text-3xl text-[#493628]">Expenses</h1><p className="mt-1 text-sm text-[#806D59]">A shared record of pregnancy-related spending, in INR.</p></header>
-    <div className="card flex items-center justify-between gap-4 bg-[#F1E9DC] p-5"><div><p className="text-xs text-[#735E49]">Total recorded</p><p className="serif mt-1 text-3xl text-[#493628]">{formatCurrency(total)}</p></div><Wallet size={29} className="text-[#8B6B4A]"/></div>
+    <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">The practical little things</p><h1 className="serif mt-1 text-3xl text-[#493628]">Expenses</h1><p className="mt-1 text-sm text-[#735E49]">A shared record of pregnancy-related spending, in INR.</p></header>
+    <div className="card flex items-center justify-between gap-4 bg-[#F1E9DC] p-5"><div><p className="text-xs text-[#735E49]">Total recorded</p><p className="serif mt-1 text-3xl text-[#493628]">{formatCurrency(total)}</p></div><Wallet size={29} className="text-[#735E49]"/></div>
     <form onSubmit={submit} className="card p-5">
-      <div className="mb-4 flex items-center gap-2"><Plus size={18} className="text-[#8B6B4A]"/><h2 className="serif text-xl text-[#493628]">Add an expense</h2></div>
+      <div className="mb-4 flex items-center gap-2"><Plus size={18} className="text-[#735E49]"/><h2 className="serif text-xl text-[#493628]">Add an expense</h2></div>
       <div className="grid gap-3 sm:grid-cols-2">
         <label><span className="field-label">Amount (₹)</span><input className="input" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required/></label>
         <label><span className="field-label">Date</span><input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required/></label>
@@ -324,8 +324,8 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
     </form>
     {removedExpense && <div role="status" className="flex items-center justify-between gap-3 rounded-xl bg-[#E8EFE4] px-4 py-3 text-sm text-[#405A3B]"><span>Expense moved to recently removed.</span><button onClick={() => void undoExpenseDelete()} className="font-semibold underline">Undo</button></div>}
     <section className="card p-5">
-      <div className="mb-3 flex items-center justify-between"><h2 className="serif text-xl text-[#493628]">Recent expenses</h2><span className="text-xs text-[#8A7762]">{rows.length} records</span></div>
-      {!loaded ? <p className="py-8 text-center text-sm text-[#806D59]">Loading expenses…</p> : rows.length === 0 ? <EmptyState title="A fresh page" body="Expenses you add will appear here, shared with your partner."/> : <div className="divide-y divide-[#EEE5DA]">{rows.map((row) => <div className="flex items-center gap-3 py-3" key={row.id}><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#8B6B4A]"><ReceiptText size={18}/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold capitalize text-[#493628]">{row.merchant || row.category.replaceAll("_"," ")}</p><p className="text-xs text-[#8A7762]">{formatDate(row.expense_date)}{row.description ? " · " + row.description : ""}</p></div><div className="text-right"><p className="text-sm font-semibold text-[#493628]">{formatCurrency(Number(row.amount))}</p><button onClick={() => void softDelete(row.id)} className="text-xs text-[#9B7865] underline">Remove</button></div></div>)}</div>}
+      <div className="mb-3 flex items-center justify-between"><h2 className="serif text-xl text-[#493628]">Recent expenses</h2><span className="text-xs text-[#735E49]">{rows.length} records</span></div>
+      {!loaded ? <p className="py-8 text-center text-sm text-[#735E49]">Loading expenses…</p> : rows.length === 0 ? <EmptyState title="A fresh page" body="Expenses you add will appear here, shared with your partner."/> : <div className="divide-y divide-[#EEE5DA]">{rows.map((row) => <div className="flex items-center gap-3 py-3" key={row.id}><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#735E49]"><ReceiptText size={18}/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold capitalize text-[#493628]">{row.merchant || row.category.replaceAll("_"," ")}</p><p className="text-xs text-[#735E49]">{formatDate(row.expense_date)}{row.description ? " · " + row.description : ""}</p></div><div className="text-right"><p className="text-sm font-semibold text-[#493628]">{formatCurrency(Number(row.amount))}</p><button onClick={() => void softDelete(row.id)} className="text-xs text-[#735E49] underline">Remove</button></div></div>)}</div>}
     </section>
   </div>;
 }
@@ -389,8 +389,8 @@ function VaultPage({ workspace, userId }: { workspace: Workspace; userId: string
   }
 
   return <div className="space-y-5">
-    <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#8B6B4A]">Private keepsakes</p><h1 className="serif mt-1 text-3xl text-[#493628]">Document vault</h1><p className="mt-1 text-sm text-[#806D59]">Reports and files stay in a private bucket, accessible only to workspace members.</p></header>
-    <div className="card flex items-center gap-4 bg-[#EFF2E9] p-5"><Illustration kind="vault" className="h-24 w-28 shrink-0"/><div><p className="font-semibold text-[#42533D]">A safe little filing place</p><p className="mt-1 text-sm leading-5 text-[#61745A]">PDFs and common image formats · Maximum 10 MB each · Private access</p></div></div>
+    <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">Private keepsakes</p><h1 className="serif mt-1 text-3xl text-[#493628]">Document vault</h1><p className="mt-1 text-sm text-[#735E49]">Reports and files stay in a private bucket, accessible only to workspace members.</p></header>
+    <div className="card flex items-center gap-4 bg-[#EFF2E9] p-5"><Illustration kind="vault" className="h-24 w-28 shrink-0"/><div><p className="font-semibold text-[#42533D]">A safe little filing place</p><p className="mt-1 text-sm leading-5 text-[#48623F]">PDFs and common image formats · Maximum 10 MB each · Private access</p></div></div>
     <form onSubmit={submit} className="card p-5">
       <h2 className="serif mb-4 text-xl text-[#493628]">Add a document</h2>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -403,8 +403,8 @@ function VaultPage({ workspace, userId }: { workspace: Workspace; userId: string
     </form>
     {removedDocument && <div role="status" className="flex items-center justify-between gap-3 rounded-xl bg-[#E8EFE4] px-4 py-3 text-sm text-[#405A3B]"><span>Document moved to recently removed. The file is retained.</span><button onClick={() => void undoDocumentDelete()} className="font-semibold underline">Undo</button></div>}
     <section className="card p-5">
-      <div className="mb-3 flex items-center justify-between"><h2 className="serif text-xl text-[#493628]">Your documents</h2><span className="text-xs text-[#8A7762]">{documents.length} files</span></div>
-      {!loaded ? <p className="py-8 text-center text-sm text-[#806D59]">Loading your vault…</p> : documents.length === 0 ? <EmptyState title="Nothing filed yet" body="Your uploaded reports and important documents will be listed here."/> : <div className="divide-y divide-[#EEE5DA]">{documents.map((row) => <div key={row.id} className="flex items-center gap-3 py-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#8B6B4A]"><FileText size={18}/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[#493628]">{row.title}</p><p className="text-xs capitalize text-[#8A7762]">{row.category.replaceAll("_"," ")} · {(row.size_bytes / 1024 / 1024).toFixed(1)} MB</p></div><button className="btn-secondary px-3 py-2 text-xs" onClick={() => void openDocument(row.storage_path)}>Open</button><button aria-label={"Remove " + row.title} className="px-2 py-2 text-xs text-[#9B7865]" onClick={() => void softDelete(row)}>Remove</button></div>)}</div>}
+      <div className="mb-3 flex items-center justify-between"><h2 className="serif text-xl text-[#493628]">Your documents</h2><span className="text-xs text-[#735E49]">{documents.length} files</span></div>
+      {!loaded ? <p className="py-8 text-center text-sm text-[#735E49]">Loading your vault…</p> : documents.length === 0 ? <EmptyState title="Nothing filed yet" body="Your uploaded reports and important documents will be listed here."/> : <div className="divide-y divide-[#EEE5DA]">{documents.map((row) => <div key={row.id} className="flex items-center gap-3 py-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#735E49]"><FileText size={18}/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[#493628]">{row.title}</p><p className="text-xs capitalize text-[#735E49]">{row.category.replaceAll("_"," ")} · {(row.size_bytes / 1024 / 1024).toFixed(1)} MB</p></div><button className="btn-secondary px-3 py-2 text-xs" onClick={() => void openDocument(row.storage_path)}>Open</button><button aria-label={"Remove " + row.title} className="px-2 py-2 text-xs text-[#735E49]" onClick={() => void softDelete(row)}>Remove</button></div>)}</div>}
     </section>
   </div>;
 }
@@ -466,30 +466,30 @@ function FamilyPage({ workspace, userId }: { workspace: Workspace; userId: strin
   }
 
   return <div className="space-y-5">
-    <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#8B6B4A]">Together, in one place</p><h1 className="serif mt-1 text-3xl text-[#493628]">Your family space</h1><p className="mt-1 text-sm text-[#806D59]">Workspace: {workspace.name}</p></header>
+    <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">Together, in one place</p><h1 className="serif mt-1 text-3xl text-[#493628]">Your family space</h1><p className="mt-1 text-sm text-[#735E49]">Workspace: {workspace.name}</p></header>
     <section className="card p-5">
-      <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#F7E8E3] text-[#986A5B]"><Users size={20}/></span><div><h2 className="serif text-xl text-[#493628]">Workspace members</h2><p className="text-sm text-[#806D59]">{members.length} authorised member{members.length === 1 ? "" : "s"}</p></div></div>
+      <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#F7E8E3] text-[#986A5B]"><Users size={20}/></span><div><h2 className="serif text-xl text-[#493628]">Workspace members</h2><p className="text-sm text-[#735E49]">{members.length} authorised member{members.length === 1 ? "" : "s"}</p></div></div>
       <div className="mt-4 space-y-2">{members.map((member) => <div key={member.user_id} className="flex items-center justify-between rounded-xl bg-[#F8F3EC] px-3 py-3"><span className="text-sm text-[#493628]">{member.user_id === userId ? "You" : "Partner"}</span><span className="rounded-full bg-[#E8EFE4] px-3 py-1 text-xs font-semibold capitalize text-[#48623F]">{member.role}</span></div>)}</div>
     </section>
     {workspace.role === "owner" ? <section className="card p-5">
       <h2 className="serif text-xl text-[#493628]">Invite your partner</h2>
-      <p className="mt-1 text-sm leading-6 text-[#806D59]">Create an email-bound invitation link. Your partner must sign in using the invited email address before joining this workspace.</p>
+      <p className="mt-1 text-sm leading-6 text-[#735E49]">Create an email-bound invitation link. Your partner must sign in using the invited email address before joining this workspace.</p>
       <form onSubmit={makeInvite} className="mt-4 flex flex-col gap-3 sm:flex-row"><input className="input flex-1" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="partner@example.com" required/><button className="btn-primary inline-flex items-center justify-center gap-2" disabled={busy} type="submit"><Mail size={16}/>{busy ? "Creating…" : "Create invite"}</button></form>
       {inviteUrl && <div className="mt-4 rounded-2xl bg-[#F4EBDD] p-3"><p className="break-all text-xs leading-5 text-[#674E36]">{inviteUrl}</p><button onClick={() => void copyInvite()} className="btn-secondary mt-3 inline-flex items-center gap-2 text-xs"><Copy size={14}/>Copy invitation link</button></div>}
-      {invites.length > 0 && <div className="mt-5 border-t border-[#EEE5DA] pt-4"><p className="text-xs font-semibold uppercase tracking-wider text-[#8B6B4A]">Pending invitations</p>{invites.map((invite) => <p key={invite.id} className="mt-2 text-sm text-[#695541]">{invite.invited_email} · expires {formatDate(invite.expires_at.slice(0,10))}</p>)}</div>}
-    </section> : <p className="card p-4 text-sm leading-6 text-[#806D59]">Only the workspace owner can create partner invitations.</p>}
+      {invites.length > 0 && <div className="mt-5 border-t border-[#EEE5DA] pt-4"><p className="text-xs font-semibold uppercase tracking-wider text-[#735E49]">Pending invitations</p>{invites.map((invite) => <p key={invite.id} className="mt-2 text-sm text-[#695541]">{invite.invited_email} · expires {formatDate(invite.expires_at.slice(0,10))}</p>)}</div>}
+    </section> : <p className="card p-4 text-sm leading-6 text-[#735E49]">Only the workspace owner can create partner invitations.</p>}
     {notice && <p role="status" className="rounded-xl bg-[#E8EFE4] p-3 text-sm text-[#405A3B]">{notice}</p>}
     {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}
-    <div className="card p-5"><div className="flex gap-3"><ShieldCheck className="mt-1 shrink-0 text-[#67805E]"/><div><h3 className="font-semibold text-[#493628]">Private by membership</h3><p className="mt-1 text-sm leading-6 text-[#806D59]">Only active members of this workspace can access its pregnancy profile, expenses and documents. Invitation tokens are stored as hashes and expire after seven days.</p></div></div></div>
+    <div className="card p-5"><div className="flex gap-3"><ShieldCheck className="mt-1 shrink-0 text-[#67805E]"/><div><h3 className="font-semibold text-[#493628]">Private by membership</h3><p className="mt-1 text-sm leading-6 text-[#735E49]">Only active members of this workspace can access its pregnancy profile, expenses and documents. Invitation tokens are stored as hashes and expire after seven days.</p></div></div></div>
   </div>;
 }
 
 function MorePage({ email, onSignOut }: { email: string; onSignOut: () => void }) {
   return <div className="space-y-5">
-    <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#8B6B4A]">A few useful details</p><h1 className="serif mt-1 text-3xl text-[#493628]">More</h1></header>
-    <section className="card p-5"><div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#E8EFE4] text-[#58704F]"><Settings size={20}/></span><div><p className="font-semibold text-[#493628]">Account</p><p className="text-sm text-[#806D59]">{email}</p></div></div><button onClick={onSignOut} className="btn-secondary mt-5 inline-flex items-center gap-2"><LogOut size={16}/>Sign out</button></section>
-    <section className="card p-5"><h2 className="serif text-xl text-[#493628]">Privacy & care</h2><p className="mt-2 text-sm leading-6 text-[#806D59]">This app is a personal organiser. It does not diagnose, interpret test results or replace advice from your doctor. Pregnancy data is accessible only to signed-in members of your private workspace.</p><p className="mt-3 text-xs text-[#9A8A77]">Timezone: India Standard Time · Date display: DD-MM-YYYY · Currency: INR</p></section>
-    <section className="card p-5"><div className="flex items-center gap-3"><CircleHelp className="text-[#8B6B4A]"/><div><p className="font-semibold text-[#493628]">Current foundation</p><p className="text-sm text-[#806D59]">Authentication, shared workspace, pregnancy profile, expenses and private vault.</p></div></div></section>
+    <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">A few useful details</p><h1 className="serif mt-1 text-3xl text-[#493628]">More</h1></header>
+    <section className="card p-5"><div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#E8EFE4] text-[#58704F]"><Settings size={20}/></span><div><p className="font-semibold text-[#493628]">Account</p><p className="text-sm text-[#735E49]">{email}</p></div></div><button onClick={onSignOut} className="btn-secondary mt-5 inline-flex items-center gap-2"><LogOut size={16}/>Sign out</button></section>
+    <section className="card p-5"><h2 className="serif text-xl text-[#493628]">Privacy & care</h2><p className="mt-2 text-sm leading-6 text-[#735E49]">This app is a personal organiser. It does not diagnose, interpret test results or replace advice from your doctor. Pregnancy data is accessible only to signed-in members of your private workspace.</p><p className="mt-3 text-xs text-[#735E49]">Timezone: India Standard Time · Date display: DD-MM-YYYY · Currency: INR</p></section>
+    <section className="card p-5"><div className="flex items-center gap-3"><CircleHelp className="text-[#735E49]"/><div><p className="font-semibold text-[#493628]">Current foundation</p><p className="text-sm text-[#735E49]">Authentication, shared workspace, pregnancy profile, expenses and private vault.</p></div></div></section>
   </div>;
 }
 
@@ -557,7 +557,7 @@ export default function App() {
 
   return <div className="min-h-screen pb-28">
     <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-8">
-      <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#F0E4D4] text-[#76583C]"><Heart size={19}/></span><div><p className="serif text-xl leading-none text-[#493628]">{APP_NAME}</p><p className="mt-1 text-[11px] text-[#8A7762]">{workspace.name}</p></div></div>
+      <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#F0E4D4] text-[#76583C]"><Heart size={19}/></span><div><p className="serif text-xl leading-none text-[#493628]">{APP_NAME}</p><p className="mt-1 text-[11px] text-[#735E49]">{workspace.name}</p></div></div>
       <div className="flex items-center gap-2"><span className="hidden rounded-full bg-[#E8EFE4] px-3 py-2 text-xs font-semibold text-[#48623F] sm:inline-flex"><ShieldCheck size={14} className="mr-1"/>Private space</span><button onClick={() => setPage("more")} aria-label="Open settings" className="grid h-10 w-10 place-items-center rounded-full border border-[#E8DDCF] bg-white text-[#76583C]"><Settings size={18}/></button></div>
     </header>
     <main className="mx-auto max-w-6xl px-4 pb-10 md:px-8">
@@ -570,7 +570,7 @@ export default function App() {
     </main>
     <nav aria-label="Main navigation" className="bottom-safe fixed inset-x-0 bottom-0 z-20 border-t border-[#E8DDCF] bg-[#FFFCF7]/95 backdrop-blur">
       <div className="mx-auto grid max-w-xl grid-cols-5 px-2 pt-2">
-        {navItems.map((item) => <button key={item.id} onClick={() => setPage(item.id)} aria-current={page === item.id ? "page" : undefined} className={"flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold " + (page === item.id ? "text-[#684B32]" : "text-[#9A8A77]")}><span className={"grid h-8 w-12 place-items-center rounded-full " + (page === item.id ? "bg-[#F0E4D4]" : "")}><NavGlyph name={item.icon}/></span>{item.label}</button>)}
+        {navItems.map((item) => <button key={item.id} onClick={() => setPage(item.id)} aria-current={page === item.id ? "page" : undefined} className={"flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold " + (page === item.id ? "text-[#684B32]" : "text-[#735E49]")}><span className={"grid h-8 w-12 place-items-center rounded-full " + (page === item.id ? "bg-[#F0E4D4]" : "")}><NavGlyph name={item.icon}/></span>{item.label}</button>)}
       </div>
     </nav>
   </div>;
