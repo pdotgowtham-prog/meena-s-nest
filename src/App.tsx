@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
-  ArrowRight, Baby, CalendarDays, Check, ChevronRight, CircleHelp, ClipboardList,
-  Copy, FileText, Heart, Home, LogOut, Mail, Menu, Plus, ReceiptText, Settings,
+  ArrowRight, Baby, CalendarDays, Check, ChevronRight, CircleHelp,
+  Copy, FileText, Heart, LogOut, Mail, Plus, ReceiptText, Settings,
   ShieldCheck, Sparkles, UploadCloud, Users, Wallet, X
 } from "lucide-react";
-import { APP_NAME, ALLOWED_DOCUMENT_TYPES, MAX_UPLOAD_BYTES, VAULT_BUCKET } from "./constants/app";
+import { APP_NAME, VAULT_BUCKET } from "./constants/app";
 import { supabase } from "./lib/supabase";
 import { formatCurrency, formatDate, localToday } from "./lib/date";
 import { calculateEdd, calculateGestationalAge, daysUntilDue, trimesterForWeek } from "./lib/pregnancy";
-import { expenseSchema, inviteSchema, profileSchema, workspaceSchema } from "./lib/validation";
+import { authSchema, expenseSchema, inviteSchema, profileSchema, vaultSchema, workspaceSchema } from "./lib/validation";
 import { EmptyState, Illustration } from "./components/Illustration";
 import type { Database } from "./lib/database.types";
 
@@ -45,16 +45,18 @@ function AuthScreen() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    const parsed = authSchema.safeParse({ email, password });
+    if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? "Check your sign-in details."); return; }
     setBusy(true);
     setError("");
     setNotice("");
     try {
       if (mode === "signup") {
-        const { data, error: authError } = await supabase.auth.signUp({ email: email.trim(), password });
+        const { data, error: authError } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.password });
         if (authError) throw authError;
         setNotice(data.session ? "Your account is ready. Set up your shared space next." : "Check your email to confirm your account, then return here to sign in.");
       } else {
-        const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        const { error: authError } = await supabase.auth.signInWithPassword({ email: parsed.data.email, password: parsed.data.password });
         if (authError) throw authError;
       }
     } catch (err) {
@@ -157,7 +159,7 @@ function ProfileForm({ workspaceId, userId, profile, onSaved }: { workspaceId: s
     setBusy(true); setError(""); setSaved(false);
     const data = {
       workspace_id: workspaceId,
-      created_by: userId,
+      created_by: profile?.created_by ?? userId,
       lmp_date: parsed.data.lmp_date || null,
       due_date: parsed.data.due_date || null,
       baby_name: parsed.data.baby_name || null,
@@ -263,6 +265,7 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
+  const [removedExpense, setRemovedExpense] = useState<Database["public"]["Tables"]["expenses"]["Row"] | null>(null);
 
   const load = useCallback(async () => {
     const { data, error: loadError } = await supabase.from("expenses").select("*").eq("workspace_id", workspace.id).is("deleted_at", null).order("expense_date", { ascending: false });
@@ -288,9 +291,18 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
 
   async function softDelete(id: string) {
     const previous = rows;
+    const removed = rows.find((item) => item.id === id) ?? null;
     setRows((current) => current.filter((item) => item.id !== id));
     const { error: deleteError } = await supabase.from("expenses").update({ deleted_at: new Date().toISOString() }).eq("id", id);
     if (deleteError) { setRows(previous); setError(deleteError.message); }
+    else setRemovedExpense(removed);
+  }
+
+  async function undoExpenseDelete() {
+    if (!removedExpense) return;
+    const { error: restoreError } = await supabase.from("expenses").update({ deleted_at: null }).eq("id", removedExpense.id);
+    if (restoreError) setError(restoreError.message);
+    else { setRemovedExpense(null); await load(); }
   }
 
   const total = rows.reduce((sum, row) => sum + Number(row.amount), 0);
@@ -309,6 +321,7 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
       {error && <p role="alert" className="mt-3 text-sm text-red-800">{error}</p>}
       <button className="btn-primary mt-4" disabled={busy} type="submit">{busy ? "Adding…" : "Add expense"}</button>
     </form>
+    {removedExpense && <div role="status" className="flex items-center justify-between gap-3 rounded-xl bg-[#E8EFE4] px-4 py-3 text-sm text-[#405A3B]"><span>Expense moved to recently removed.</span><button onClick={() => void undoExpenseDelete()} className="font-semibold underline">Undo</button></div>}
     <section className="card p-5">
       <div className="mb-3 flex items-center justify-between"><h2 className="serif text-xl text-[#493628]">Recent expenses</h2><span className="text-xs text-[#8A7762]">{rows.length} records</span></div>
       {!loaded ? <p className="py-8 text-center text-sm text-[#806D59]">Loading expenses…</p> : rows.length === 0 ? <EmptyState title="A fresh page" body="Expenses you add will appear here, shared with your partner."/> : <div className="divide-y divide-[#EEE5DA]">{rows.map((row) => <div className="flex items-center gap-3 py-3" key={row.id}><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#8B6B4A]"><ReceiptText size={18}/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold capitalize text-[#493628]">{row.merchant || row.category.replaceAll("_"," ")}</p><p className="text-xs text-[#8A7762]">{formatDate(row.expense_date)}{row.description ? " · " + row.description : ""}</p></div><div className="text-right"><p className="text-sm font-semibold text-[#493628]">{formatCurrency(Number(row.amount))}</p><button onClick={() => void softDelete(row.id)} className="text-xs text-[#9B7865] underline">Remove</button></div></div>)}</div>}
@@ -324,6 +337,7 @@ function VaultPage({ workspace, userId }: { workspace: Workspace; userId: string
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(false);
+  const [removedDocument, setRemovedDocument] = useState<Database["public"]["Tables"]["vault_documents"]["Row"] | null>(null);
 
   const load = useCallback(async () => {
     const { data, error: loadError } = await supabase.from("vault_documents").select("*").eq("workspace_id", workspace.id).is("deleted_at", null).order("created_at", { ascending: false });
@@ -335,15 +349,14 @@ function VaultPage({ workspace, userId }: { workspace: Workspace; userId: string
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!file) { setError("Choose a PDF or image first."); return; }
-    if (!title.trim()) { setError("Give the document a title."); return; }
-    if (file.size > MAX_UPLOAD_BYTES) { setError("Files must be 10 MB or smaller."); return; }
-    if (!ALLOWED_DOCUMENT_TYPES.includes(file.type as (typeof ALLOWED_DOCUMENT_TYPES)[number])) { setError("Allowed file types: PDF, JPG, PNG and WEBP."); return; }
+    const parsed = vaultSchema.safeParse({ title, category, fileSize: file.size, mimeType: file.type });
+    if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? "Check the document details."); return; }
     setBusy(true); setError("");
     const path = workspace.id + "/" + crypto.randomUUID() + "-" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const { error: uploadError } = await supabase.storage.from(VAULT_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
     if (uploadError) { setError(uploadError.message); setBusy(false); return; }
     const { error: insertError } = await supabase.from("vault_documents").insert({
-      workspace_id: workspace.id, created_by: userId, title: title.trim(), category,
+      workspace_id: workspace.id, created_by: userId, title: parsed.data.title, category: parsed.data.category,
       file_name: file.name, storage_path: path, mime_type: file.type, size_bytes: file.size
     });
     if (insertError) {
@@ -364,7 +377,14 @@ function VaultPage({ workspace, userId }: { workspace: Workspace; userId: string
     setDocuments((current) => current.filter((item) => item.id !== row.id));
     const { error: updateError } = await supabase.from("vault_documents").update({ deleted_at: new Date().toISOString() }).eq("id", row.id);
     if (updateError) { setDocuments(previous); setError(updateError.message); return; }
-    window.setTimeout(() => { void supabase.storage.from(VAULT_BUCKET).remove([row.storage_path]); }, 8000);
+    setRemovedDocument(row);
+  }
+
+  async function undoDocumentDelete() {
+    if (!removedDocument) return;
+    const { error: restoreError } = await supabase.from("vault_documents").update({ deleted_at: null }).eq("id", removedDocument.id);
+    if (restoreError) setError(restoreError.message);
+    else { setRemovedDocument(null); await load(); }
   }
 
   return <div className="space-y-5">
@@ -380,6 +400,7 @@ function VaultPage({ workspace, userId }: { workspace: Workspace; userId: string
       {error && <p role="alert" className="mt-3 text-sm text-red-800">{error}</p>}
       <button className="btn-primary mt-4 inline-flex items-center gap-2" disabled={busy} type="submit"><UploadCloud size={16}/>{busy ? "Securing file…" : "Upload to private vault"}</button>
     </form>
+    {removedDocument && <div role="status" className="flex items-center justify-between gap-3 rounded-xl bg-[#E8EFE4] px-4 py-3 text-sm text-[#405A3B]"><span>Document moved to recently removed. The file is retained.</span><button onClick={() => void undoDocumentDelete()} className="font-semibold underline">Undo</button></div>}
     <section className="card p-5">
       <div className="mb-3 flex items-center justify-between"><h2 className="serif text-xl text-[#493628]">Your documents</h2><span className="text-xs text-[#8A7762]">{documents.length} files</span></div>
       {!loaded ? <p className="py-8 text-center text-sm text-[#806D59]">Loading your vault…</p> : documents.length === 0 ? <EmptyState title="Nothing filed yet" body="Your uploaded reports and important documents will be listed here."/> : <div className="divide-y divide-[#EEE5DA]">{documents.map((row) => <div key={row.id} className="flex items-center gap-3 py-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#8B6B4A]"><FileText size={18}/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[#493628]">{row.title}</p><p className="text-xs capitalize text-[#8A7762]">{row.category.replaceAll("_"," ")} · {(row.size_bytes / 1024 / 1024).toFixed(1)} MB</p></div><button className="btn-secondary px-3 py-2 text-xs" onClick={() => void openDocument(row.storage_path)}>Open</button><button aria-label={"Remove " + row.title} className="px-2 py-2 text-xs text-[#9B7865]" onClick={() => void softDelete(row)}>Remove</button></div>)}</div>}
