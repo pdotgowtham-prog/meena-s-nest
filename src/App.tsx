@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import {
   ArrowRight, Baby, CalendarDays, Check, ChevronRight, CircleHelp,
   Copy, FileText, Heart, LogOut, Mail, Plus, ReceiptText, Settings,
-  ShieldCheck, Sparkles, UploadCloud, Users, Wallet, X
+  ShieldCheck, Sparkles, UploadCloud, Users, Wallet, X, Moon, Sun
 } from "lucide-react";
 import { APP_NAME, VAULT_BUCKET } from "./constants/app";
 import { supabase } from "./lib/supabase";
@@ -484,10 +484,10 @@ function FamilyPage({ workspace, userId }: { workspace: Workspace; userId: strin
   </div>;
 }
 
-function MorePage({ email, onSignOut }: { email: string; onSignOut: () => void }) {
+function MorePage({ email, onSignOut, darkMode, onToggleTheme }: { email: string; onSignOut: () => void; darkMode: boolean; onToggleTheme: () => void }) {
   return <div className="space-y-5">
     <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">A few useful details</p><h1 className="serif mt-1 text-3xl text-[#493628]">More</h1></header>
-    <section className="card p-5"><div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#E8EFE4] text-[#58704F]"><Settings size={20}/></span><div><p className="font-semibold text-[#493628]">Account</p><p className="text-sm text-[#735E49]">{email}</p></div></div><button onClick={onSignOut} className="btn-secondary mt-5 inline-flex items-center gap-2"><LogOut size={16}/>Sign out</button></section>
+    <section className="card p-5"><div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#E8EFE4] text-[#58704F]"><Settings size={20}/></span><div><p className="font-semibold text-[#493628]">Account</p><p className="text-sm text-[#735E49]">{email}</p></div></div><button onClick={onToggleTheme} className="btn-secondary mt-5 inline-flex items-center gap-2"><Sun size={16}/>{darkMode ? "Switch to light theme" : "Switch to dark theme"}<Moon size={15}/></button><button onClick={onSignOut} className="btn-secondary ml-2 mt-5 inline-flex items-center gap-2"><LogOut size={16}/>Sign out</button></section>
     <section className="card p-5"><h2 className="serif text-xl text-[#493628]">Privacy & care</h2><p className="mt-2 text-sm leading-6 text-[#735E49]">This app is a personal organiser. It does not diagnose, interpret test results or replace advice from your doctor. Pregnancy data is accessible only to signed-in members of your private workspace.</p><p className="mt-3 text-xs text-[#735E49]">Timezone: India Standard Time · Date display: DD-MM-YYYY · Currency: INR</p></section>
     <section className="card p-5"><div className="flex items-center gap-3"><CircleHelp className="text-[#735E49]"/><div><p className="font-semibold text-[#493628]">Current foundation</p><p className="text-sm text-[#735E49]">Authentication, shared workspace, pregnancy profile, expenses and private vault.</p></div></div></section>
   </div>;
@@ -500,6 +500,14 @@ export default function App() {
   const [page, setPage] = useState<Page>("home");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return localStorage.getItem("nest-theme") === "dark"; } catch { return false; }
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? "dark" : "light";
+    try { localStorage.setItem("nest-theme", darkMode ? "dark" : "light"); } catch { /* Theme preference is optional. */ }
+  }, [darkMode]);
 
   const loadWorkspace = useCallback(async (userId: string) => {
     setError("");
@@ -566,7 +574,7 @@ export default function App() {
       {page === "expenses" && <ExpensePage workspace={workspace} userId={session.user.id}/>}
       {page === "vault" && <VaultPage workspace={workspace} userId={session.user.id}/>}
       {page === "family" && <FamilyPage workspace={workspace} userId={session.user.id}/>}
-      {page === "more" && <MorePage email={session.user.email ?? ""} onSignOut={() => void signOut()}/>}
+      {page === "more" && <MorePage email={session.user.email ?? ""} onSignOut={() => void signOut()} darkMode={darkMode} onToggleTheme={() => setDarkMode((value) => !value)}/>}
     </main>
     <nav aria-label="Main navigation" className="bottom-safe fixed inset-x-0 bottom-0 z-20 border-t border-[#E8DDCF] bg-[#FFFCF7]/95 backdrop-blur">
       <div className="mx-auto grid max-w-xl grid-cols-5 px-2 pt-2">
