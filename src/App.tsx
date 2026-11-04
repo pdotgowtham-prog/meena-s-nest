@@ -353,7 +353,7 @@ function VaultPage({ workspace, userId }: { workspace: Workspace; userId: string
     const parsed = vaultSchema.safeParse({ title, category, fileSize: file.size, mimeType: file.type });
     if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? "Check the document details."); return; }
     setBusy(true); setError("");
-    const path = workspace.id + "/" + crypto.randomUUID() + "-" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = workspace.id + "/" + crypto.randomUUID();
     const { error: uploadError } = await supabase.storage.from(VAULT_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
     if (uploadError) { setError(uploadError.message); setBusy(false); return; }
     const { error: insertError } = await supabase.from("vault_documents").insert({

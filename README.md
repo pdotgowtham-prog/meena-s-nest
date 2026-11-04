@@ -71,7 +71,7 @@ The invitation token is an access credential. Share it only with the intended pa
 
 ## Private document vault
 
-The pregnancy-vault bucket is private. Files are stored under <workspace UUID>/<random file name>. RLS policies on storage.objects check active workspace membership for listing, upload, download, update and deletion. The client only creates short-lived signed URLs after an authorised metadata query.
+The pregnancy-vault bucket is private. Files are stored under <workspace UUID>/<random UUID>; original filenames remain only in workspace-protected document metadata. This avoids exposing report names in object URLs. RLS policies on storage.objects check active workspace membership for listing, upload, download, update and deletion. The client only creates short-lived signed URLs after an authorised metadata query.
 
 Allowed formats: PDF, JPEG, PNG and WEBP. Maximum file size: 10 MB.
 
