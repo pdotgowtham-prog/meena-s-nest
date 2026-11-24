@@ -37,11 +37,25 @@ function NavGlyph({ name }: { name: (typeof navItems)[number]["icon"] }) {
 
 function AuthScreen() {
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [resetSent, setResetSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+
+  async function requestPasswordReset() {
+    setBusy(true); setError(""); setNotice(""); setResetSent(false);
+    const parsed = authSchema.shape.email.safeParse(email);
+    if (!parsed.success) { setError("Enter your account email address first."); setBusy(false); return; }
+    try {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(parsed.data, { redirectTo: `${window.location.origin}/?password-reset=1` });
+      if (resetError) throw resetError;
+      setResetSent(true);
+      setNotice("If an account exists for this email, a password reset link has been sent. Check your inbox and spam folder.");
+    } catch (err) { setError(err instanceof Error ? err.message : "Unable to send the reset email. Please try again."); }
+    finally { setBusy(false); }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -89,6 +103,7 @@ function AuthScreen() {
         <form className="mt-7 space-y-4" onSubmit={submit}>
           <label className="block"><span className="field-label">Email address</span><input className="input" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com"/></label>
           <label className="block"><span className="field-label">Password</span><input className="input" type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters"/></label>
+          {mode === "login" && <button type="button" disabled={busy} onClick={() => void requestPasswordReset()} className="text-sm font-semibold text-[#76583C] underline underline-offset-4 disabled:opacity-50">Forgot password?</button>}
           {error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}
           {notice && <p role="status" className="rounded-xl bg-[#E8F0E4] px-3 py-2 text-sm text-[#405A3B]">{notice}</p>}
           <button disabled={busy} className="btn-primary flex w-full items-center justify-center gap-2" type="submit">{busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"} <ArrowRight size={16}/></button>
@@ -560,7 +575,7 @@ export default function App() {
   async function signOut() { await supabase.auth.signOut(); }
 
   if (loading) return <main className="grid min-h-screen place-items-center"><div className="card px-8 py-7 text-center"><Illustration kind="nest" className="mx-auto h-32"/><p className="serif mt-2 text-xl text-[#493628]">Settling into your nest…</p></div></main>;
-  if (!session) return <AuthScreen/>;
+  if (new URLSearchParams(window.location.search).get("password-reset") === "1") return session ? <PasswordResetScreen/> : <main className="grid min-h-screen place-items-center"><p className="card p-6 text-sm text-[#735E49]">Opening your secure password reset… If this message remains, request a new reset email.</p></main>;\n  if (!session) return <AuthScreen/>;
   if (!workspace) return <><WorkspaceSetup userId={session.user.id} onCreated={() => loadWorkspace(session.user.id)}/>{error && <p role="alert" className="fixed bottom-5 left-4 right-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}</>;
 
   return <div className="min-h-screen pb-28">
