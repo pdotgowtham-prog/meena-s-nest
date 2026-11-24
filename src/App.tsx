@@ -343,7 +343,29 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
   async function addExpense(event:FormEvent){event.preventDefault();const p=expenseSchema.safeParse({amount,expense_date:date,category,merchant,description});if(!p.success){setError(p.error.issues[0]?.message??"Check expense details.");return;}const invalid=expenseFiles.find(file=>!["application/pdf","image/jpeg","image/png","image/webp","image/heic","image/heif"].includes(file.type)||file.size>10*1024*1024);if(invalid){setError("Each attachment must be a PDF or image up to 10 MB: "+invalid.name);return;}setBusy(true);setError("");const payload={workspace_id:workspace.id,created_by:editingExpense?.created_by??userId,amount:p.data.amount,expense_date:p.data.expense_date,category:p.data.category,merchant:p.data.merchant||null,description:p.data.description||null,currency:"INR" as const};const result=editingExpense?await supabase.from("expenses").update(payload).eq("id",editingExpense.id).select("*").single():await supabase.from("expenses").insert(payload).select("*").single();const expense=result.data;if(result.error||!expense){setError(result.error?.message??"Could not save expense.");setBusy(false);return;}const failed:string[]=[];for(const file of expenseFiles){const path=workspace.id+"/"+crypto.randomUUID();const up=await supabase.storage.from(VAULT_BUCKET).upload(path,file,{contentType:file.type,upsert:false});if(up.error){failed.push(file.name+" ("+up.error.message+")");continue;}const docCategory=category==="scan"?"scan":category==="lab_test"?"lab_report":category==="medicine"?"prescription":"other";const d=await supabase.from("vault_documents").insert({workspace_id:workspace.id,created_by:userId,title:file.name,category:docCategory,file_name:file.name,storage_path:path,mime_type:file.type,size_bytes:file.size,document_date:date,notes:"Attached to expense: "+(description||category.replaceAll("_"," ")),expense_id:expense.id});if(d.error){await supabase.storage.from(VAULT_BUCKET).remove([path]);failed.push(file.name+" ("+d.error.message+")");}}clearExpenseForm();if(failed.length)setError("Expense saved, but these attachments could not be added: "+failed.join("; "));await load();setBusy(false);}
   async function removeExpense(id:string){const old=expenses.find(x=>x.id===id)??null;if(!old)return;setError("");const linked=docs.filter(d=>d.expense_id===id&&!d.deleted_at);const stamp=new Date().toISOString();const ids=linked.map(d=>d.id);if(ids.length){const {error:de}=await supabase.from("vault_documents").update({deleted_at:stamp}).in("id",ids);if(de){setError("Could not delete linked files: "+de.message);return;}}const {error:e}=await supabase.from("expenses").update({deleted_at:stamp}).eq("id",id);if(e){if(ids.length)await supabase.from("vault_documents").update({deleted_at:null}).in("id",ids);setError("Could not delete this expense: "+e.message);return;}setRemoved(old);setRemovedDocIds(ids);await load();}
   async function undo(){if(!removed)return;const {error:e}=await supabase.from("expenses").update({deleted_at:null}).eq("id",removed.id);if(e){setError(e.message);return;}if(removedDocIds.length){const {error:de}=await supabase.from("vault_documents").update({deleted_at:null}).in("id",removedDocIds);if(de)setError("Expense restored, but its documents could not all be restored: "+de.message);}setRemoved(null);setRemovedDocIds([]);await load();}
-  async function removeVisit(v:Consultation){if(!window.confirm("Move this consultation to recently removed?"))return;const {error:e}=await supabase.from("consultations").update({deleted_at:new Date().toISOString()}).eq("id",v.id);if(e)setError(e.message);else await load();}
+  async function removeVisit(v:Consultation){
+    setError("");
+    const stamp=new Date().toISOString();
+    const linkedDocs=docs.filter(d=>d.consultation_id===v.id&&!d.deleted_at);
+    const linkedFee=expenses.find(x=>x.consultation_id===v.id&&!x.deleted_at);
+    const docIds=linkedDocs.map(d=>d.id);
+    if(docIds.length){
+      const {error:docError}=await supabase.from("vault_documents").update({deleted_at:stamp}).in("id",docIds);
+      if(docError){setError("Could not remove consultation documents: "+docError.message);return;}
+    }
+    if(linkedFee){
+      const {error:feeError}=await supabase.from("expenses").update({deleted_at:stamp}).eq("id",linkedFee.id);
+      if(feeError){if(docIds.length)await supabase.from("vault_documents").update({deleted_at:null}).in("id",docIds);setError("Could not remove consultation fee: "+feeError.message);return;}
+    }
+    const {error:e}=await supabase.from("consultations").update({deleted_at:stamp}).eq("id",v.id);
+    if(e){
+      if(linkedFee)await supabase.from("expenses").update({deleted_at:null}).eq("id",linkedFee.id);
+      if(docIds.length)await supabase.from("vault_documents").update({deleted_at:null}).in("id",docIds);
+      setError("Could not remove this consultation: "+e.message);return;
+    }
+    if(editing?.id===v.id)clearForm();
+    await load();
+  }
   const total=expenses.reduce((n,x)=>n+Number(x.amount),0);
   const categories=["scan","lab_test","medicine","travel","nutrition","baby_items","insurance","other"];
   return <div className="space-y-5">
