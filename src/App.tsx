@@ -594,7 +594,8 @@ export default function App() {
   async function signOut() { await supabase.auth.signOut(); }
 
   if (loading) return <main className="grid min-h-screen place-items-center"><div className="card px-8 py-7 text-center"><Illustration kind="nest" className="mx-auto h-32"/><p className="serif mt-2 text-xl text-[#493628]">Settling into your nest…</p></div></main>;
-  if (new URLSearchParams(window.location.search).get("password-reset") === "1") return session ? <PasswordResetScreen/> : <main className="grid min-h-screen place-items-center"><p className="card p-6 text-sm text-[#735E49]">Opening your secure password reset… If this message remains, request a new reset email.</p></main>;\n  if (!session) return <AuthScreen/>;
+  if (new URLSearchParams(window.location.search).get("password-reset") === "1") return session ? <PasswordResetScreen/> : <main className="grid min-h-screen place-items-center"><p className="card p-6 text-sm text-[#735E49]">Opening your secure password reset… If this message remains, request a new reset email.</p></main>;
+  if (!session) return <AuthScreen/>;
   if (!workspace) return <><WorkspaceSetup userId={session.user.id} onCreated={() => loadWorkspace(session.user.id)}/>{error && <p role="alert" className="fixed bottom-5 left-4 right-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}</>;
 
   return <div className="min-h-screen pb-28">
