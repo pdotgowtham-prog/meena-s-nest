@@ -291,76 +291,96 @@ function Dashboard({ workspace, profile, userId, onProfileSaved, onNavigate }: {
 }
 
 function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: string }) {
-  const [rows, setRows] = useState<Database["public"]["Tables"]["expenses"]["Row"][]>([]);
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState<Database["public"]["Tables"]["expenses"]["Row"]["category"]>("consultation");
-  const [date, setDate] = useState(localToday());
-  const [merchant, setMerchant] = useState("");
-  const [description, setDescription] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [loaded, setLoaded] = useState(false);
-  const [removedExpense, setRemovedExpense] = useState<Database["public"]["Tables"]["expenses"]["Row"] | null>(null);
-
-  const load = useCallback(async () => {
-    const { data, error: loadError } = await supabase.from("expenses").select("*").eq("workspace_id", workspace.id).is("deleted_at", null).order("expense_date", { ascending: false });
-    if (loadError) setError(loadError.message); else setRows(data ?? []);
-    setLoaded(true);
-  }, [workspace.id]);
-  useEffect(() => { void load(); }, [load]);
-
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    const parsed = expenseSchema.safeParse({ amount, expense_date: date, category, merchant, description });
-    if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? "Please check the expense."); return; }
-    setBusy(true); setError("");
-    const { error: insertError } = await supabase.from("expenses").insert({
-      workspace_id: workspace.id, created_by: userId, amount: parsed.data.amount,
-      expense_date: parsed.data.expense_date, category: parsed.data.category,
-      merchant: parsed.data.merchant || null, description: parsed.data.description || null, currency: "INR"
-    });
-    if (insertError) setError(insertError.message);
-    else { setAmount(""); setMerchant(""); setDescription(""); await load(); }
-    setBusy(false);
+  type Expense = Database["public"]["Tables"]["expenses"]["Row"];
+  type Consultation = Database["public"]["Tables"]["consultations"]["Row"];
+  type Doc = Database["public"]["Tables"]["vault_documents"]["Row"];
+  const [expenses,setExpenses]=useState<Expense[]>([]);
+  const [visits,setVisits]=useState<Consultation[]>([]);
+  const [docs,setDocs]=useState<Doc[]>([]);
+  const [editing,setEditing]=useState<Consultation|null>(null);
+  const [visitDate,setVisitDate]=useState(localToday());
+  const [week,setWeek]=useState(""); const [doctor,setDoctor]=useState(""); const [speciality,setSpeciality]=useState("");
+  const [hospital,setHospital]=useState(""); const [reason,setReason]=useState(""); const [notes,setNotes]=useState("");
+  const [advice,setAdvice]=useState(""); const [followUp,setFollowUp]=useState(""); const [fee,setFee]=useState("");
+  const [payment,setPayment]=useState("upi"); const [file,setFile]=useState<File|null>(null);
+  const [amount,setAmount]=useState(""); const [date,setDate]=useState(localToday());
+  const [category,setCategory]=useState<Expense["category"]>("scan"); const [merchant,setMerchant]=useState(""); const [description,setDescription]=useState("");
+  const [busy,setBusy]=useState(false); const [error,setError]=useState(""); const [loaded,setLoaded]=useState(false); const [expanded,setExpanded]=useState<string|null>(null);
+  const [removed,setRemoved]=useState<Expense|null>(null);
+  const load=useCallback(async()=>{
+    const [a,b,c]=await Promise.all([
+      supabase.from("expenses").select("*").eq("workspace_id",workspace.id).is("deleted_at",null).order("expense_date",{ascending:false}),
+      supabase.from("consultations").select("*").eq("workspace_id",workspace.id).is("deleted_at",null).order("consultation_date",{ascending:false}),
+      supabase.from("vault_documents").select("*").eq("workspace_id",workspace.id).is("deleted_at",null).order("created_at",{ascending:false})
+    ]);
+    if(a.error||b.error||c.error) setError(a.error?.message||b.error?.message||c.error?.message||"Unable to load records.");
+    setExpenses(a.data??[]); setVisits(b.data??[]); setDocs(c.data??[]); setLoaded(true);
+  },[workspace.id]);
+  useEffect(()=>{void load();},[load]);
+  function clearForm(){setEditing(null);setVisitDate(localToday());setWeek("");setDoctor("");setSpeciality("");setHospital("");setReason("");setNotes("");setAdvice("");setFollowUp("");setFee("");setPayment("upi");setFile(null);const el=document.getElementById("visit-file") as HTMLInputElement|null;if(el)el.value="";}
+  function openVisit(v:Consultation){setEditing(v);setVisitDate(v.consultation_date);setWeek(v.pregnancy_week?.toString()??"");setDoctor(v.doctor_name??"");setSpeciality(v.speciality??"");setHospital(v.hospital??"");setReason(v.reason??"");setNotes(v.notes??"");setAdvice(v.advice??"");setFollowUp(v.follow_up_date??"");setFee(v.fee_amount?.toString()??"");setPayment(v.payment_method??"upi");setExpanded(v.id);setFile(null);window.scrollTo({top:0,behavior:"smooth"});}
+  async function openDoc(path:string){const {data,error:e}=await supabase.storage.from(VAULT_BUCKET).createSignedUrl(path,60);if(e)setError(e.message);else if(data?.signedUrl)window.open(data.signedUrl,"_blank","noopener,noreferrer");}
+  async function saveVisit(event:FormEvent){
+    event.preventDefault();const f=fee.trim()?Number(fee):null;
+    if(f!==null&&(!Number.isFinite(f)||f<0||f>99999999.99)){setError("Enter a valid consultation fee.");return;}
+    if(week&&(!Number.isInteger(Number(week))||Number(week)<1||Number(week)>45)){setError("Pregnancy week must be between 1 and 45.");return;}
+    if(file&&(!["application/pdf","image/jpeg","image/png","image/webp"].includes(file.type)||file.size>10*1024*1024)){setError("Use a PDF or image up to 10 MB.");return;}
+    setBusy(true);setError("");
+    const payload={workspace_id:workspace.id,created_by:editing?.created_by??userId,consultation_date:visitDate,pregnancy_week:week?Number(week):null,doctor_name:doctor.trim()||null,speciality:speciality.trim()||null,hospital:hospital.trim()||null,reason:reason.trim()||null,notes:notes.trim()||null,advice:advice.trim()||null,follow_up_date:followUp||null,fee_amount:f,payment_method:f===null?null:payment};
+    const result=editing?await supabase.from("consultations").update(payload).eq("id",editing.id).select("*").single():await supabase.from("consultations").insert(payload).select("*").single();
+    if(result.error||!result.data){setError(result.error?.message??"Could not save consultation.");setBusy(false);return;}
+    const visit=result.data;const oldFee=expenses.find(x=>x.consultation_id===visit.id);
+    if(f!==null&&f>0){const feeRow={workspace_id:workspace.id,created_by:editing?.created_by??userId,expense_date:visitDate,amount:f,currency:"INR",category:"consultation",merchant:hospital||doctor||"Consultation",description:"Consultation fee",consultation_id:visit.id};
+      const feeResult=oldFee?await supabase.from("expenses").update(feeRow).eq("id",oldFee.id):await supabase.from("expenses").insert(feeRow);
+      if(feeResult.error)setError("Visit saved; fee entry issue: "+feeResult.error.message);
+    }else if(oldFee){await supabase.from("expenses").update({deleted_at:new Date().toISOString()}).eq("id",oldFee.id);}
+    if(file){const path=workspace.id+"/"+crypto.randomUUID();const up=await supabase.storage.from(VAULT_BUCKET).upload(path,file,{contentType:file.type});
+      if(up.error)setError("Visit saved; file upload failed: "+up.error.message);
+      else{const d=await supabase.from("vault_documents").insert({workspace_id:workspace.id,created_by:userId,title:file.name,category:file.type==="application/pdf"?"lab_report":"prescription",file_name:file.name,storage_path:path,mime_type:file.type,size_bytes:file.size,document_date:visitDate,notes:"Attached to consultation",consultation_id:visit.id});if(d.error){await supabase.storage.from(VAULT_BUCKET).remove([path]);setError("Visit saved; attachment record failed: "+d.error.message);}}
+    }
+    clearForm();await load();setBusy(false);
   }
-
-  async function softDelete(id: string) {
-    const previous = rows;
-    const removed = rows.find((item) => item.id === id) ?? null;
-    setRows((current) => current.filter((item) => item.id !== id));
-    const { error: deleteError } = await supabase.from("expenses").update({ deleted_at: new Date().toISOString() }).eq("id", id);
-    if (deleteError) { setRows(previous); setError(deleteError.message); }
-    else setRemovedExpense(removed);
-  }
-
-  async function undoExpenseDelete() {
-    if (!removedExpense) return;
-    const { error: restoreError } = await supabase.from("expenses").update({ deleted_at: null }).eq("id", removedExpense.id);
-    if (restoreError) setError(restoreError.message);
-    else { setRemovedExpense(null); await load(); }
-  }
-
-  const total = rows.reduce((sum, row) => sum + Number(row.amount), 0);
+  async function addExpense(event:FormEvent){event.preventDefault();const p=expenseSchema.safeParse({amount,expense_date:date,category,merchant,description});if(!p.success){setError(p.error.issues[0]?.message??"Check expense details.");return;}setBusy(true);setError("");const {error:e}=await supabase.from("expenses").insert({workspace_id:workspace.id,created_by:userId,amount:p.data.amount,expense_date:p.data.expense_date,category:p.data.category,merchant:p.data.merchant||null,description:p.data.description||null,currency:"INR"});if(e)setError(e.message);else{setAmount("");setMerchant("");setDescription("");await load();}setBusy(false);}
+  async function removeExpense(id:string){const old=expenses.find(x=>x.id===id)??null;const {error:e}=await supabase.from("expenses").update({deleted_at:new Date().toISOString()}).eq("id",id);if(e)setError(e.message);else{setRemoved(old);await load();}}
+  async function undo(){if(!removed)return;const {error:e}=await supabase.from("expenses").update({deleted_at:null}).eq("id",removed.id);if(e)setError(e.message);else{setRemoved(null);await load();}}
+  async function removeVisit(v:Consultation){if(!window.confirm("Move this consultation to recently removed?"))return;const {error:e}=await supabase.from("consultations").update({deleted_at:new Date().toISOString()}).eq("id",v.id);if(e)setError(e.message);else await load();}
+  const total=expenses.reduce((n,x)=>n+Number(x.amount),0);
+  const categories=["scan","lab_test","medicine","travel","nutrition","baby_items","insurance","other"];
   return <div className="space-y-5">
-    <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">The practical little things</p><h1 className="serif mt-1 text-3xl text-[#493628]">Expenses</h1><p className="mt-1 text-sm text-[#735E49]">A shared record of pregnancy-related spending, in INR.</p></header>
-    <div className="card flex items-center justify-between gap-4 bg-[#F1E9DC] p-5"><div><p className="text-xs text-[#735E49]">Total recorded</p><p className="serif mt-1 text-3xl text-[#493628]">{formatCurrency(total)}</p></div><Wallet size={29} className="text-[#735E49]"/></div>
-    <form onSubmit={submit} className="card p-5">
-      <div className="mb-4 flex items-center gap-2"><Plus size={18} className="text-[#735E49]"/><h2 className="serif text-xl text-[#493628]">Add an expense</h2></div>
+    <header><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">Medical records & spending</p><h1 className="serif mt-1 text-3xl text-[#493628]">Expenses</h1><p className="mt-1 text-sm text-[#735E49]">Consultations, fees, prescriptions, scan reports, bills and other pregnancy expenses together.</p></header>
+    <div className="card flex items-center justify-between gap-4 bg-[#F1E9DC] p-5"><div><p className="text-xs text-[#735E49]">Total recorded spending</p><p className="serif mt-1 text-3xl text-[#493628]">{formatCurrency(total)}</p><p className="mt-1 text-xs text-[#735E49]">{visits.length} consultations · {expenses.length} expense entries</p></div><Wallet size={29} className="text-[#735E49]"/></div>
+    <form onSubmit={saveVisit} className="card p-5">
+      <div className="mb-4 flex items-center justify-between gap-2"><div><p className="text-xs font-semibold uppercase tracking-wider text-[#735E49]">{editing?"Editing previous visit":"Medical visit record"}</p><h2 className="serif text-xl text-[#493628]">{editing?"Update consultation":"Add consultation"}</h2></div>{editing&&<button type="button" onClick={clearForm} className="btn-secondary px-3 py-2 text-xs">Cancel</button>}</div>
       <div className="grid gap-3 sm:grid-cols-2">
-        <label><span className="field-label">Amount (₹)</span><input className="input" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" required/></label>
-        <label><span className="field-label">Date</span><input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} required/></label>
-        <label><span className="field-label">Category</span><select className="input" value={category} onChange={(e) => setCategory(e.target.value as typeof category)}>{["consultation","scan","lab_test","medicine","travel","nutrition","baby_items","insurance","other"].map((v) => <option key={v} value={v}>{v.replaceAll("_"," ")}</option>)}</select></label>
-        <label><span className="field-label">Hospital / merchant (optional)</span><input className="input" value={merchant} onChange={(e) => setMerchant(e.target.value)} maxLength={140} placeholder="Name"/></label>
-        <label className="sm:col-span-2"><span className="field-label">Note (optional)</span><input className="input" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} placeholder="A short note"/></label>
+        <label><span className="field-label">Visit date</span><input className="input" type="date" required value={visitDate} onChange={e=>setVisitDate(e.target.value)}/></label>
+        <label><span className="field-label">Pregnancy week</span><input className="input" type="number" min="1" max="45" value={week} onChange={e=>setWeek(e.target.value)} placeholder="Optional"/></label>
+        <label><span className="field-label">Doctor name</span><input className="input" value={doctor} onChange={e=>setDoctor(e.target.value)} maxLength={140}/></label>
+        <label><span className="field-label">Speciality</span><input className="input" value={speciality} onChange={e=>setSpeciality(e.target.value)} maxLength={100} placeholder="e.g. Gynaecologist"/></label>
+        <label className="sm:col-span-2"><span className="field-label">Hospital / clinic</span><input className="input" value={hospital} onChange={e=>setHospital(e.target.value)} maxLength={180}/></label>
+        <label className="sm:col-span-2"><span className="field-label">Reason for consultation</span><textarea className="input min-h-16" value={reason} onChange={e=>setReason(e.target.value)} maxLength={1000}/></label>
+        <label><span className="field-label">Consultation fee (₹)</span><input className="input" type="number" min="0" step="0.01" value={fee} onChange={e=>setFee(e.target.value)}/></label>
+        <label><span className="field-label">Payment method</span><select className="input" value={payment} onChange={e=>setPayment(e.target.value)}><option value="upi">UPI</option><option value="cash">Cash</option><option value="card">Card</option><option value="insurance">Insurance</option><option value="other">Other</option></select></label>
+        <label className="sm:col-span-2"><span className="field-label">Consultation notes</span><textarea className="input min-h-20" value={notes} onChange={e=>setNotes(e.target.value)} maxLength={4000} placeholder="What was discussed during the visit?"/></label>
+        <label className="sm:col-span-2"><span className="field-label">Doctor's advice / medicines / next steps</span><textarea className="input min-h-20" value={advice} onChange={e=>setAdvice(e.target.value)} maxLength={4000}/></label>
+        <label><span className="field-label">Follow-up date</span><input className="input" type="date" value={followUp} onChange={e=>setFollowUp(e.target.value)}/></label>
+        <label><span className="field-label">Attach prescription, scan or bill (PDF/photo, max 10 MB)</span><input id="visit-file" className="input" type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
       </div>
-      {error && <p role="alert" className="mt-3 text-sm text-red-800">{error}</p>}
-      <button className="btn-primary mt-4" disabled={busy} type="submit">{busy ? "Adding…" : "Add expense"}</button>
+      {error&&<p role="alert" className="mt-3 text-sm text-red-800">{error}</p>}
+      <button className="btn-primary mt-4" disabled={busy}>{busy?"Saving securely…":editing?"Save changes":"Save consultation"}</button>
     </form>
-    {removedExpense && <div role="status" className="flex items-center justify-between gap-3 rounded-xl bg-[#E8EFE4] px-4 py-3 text-sm text-[#405A3B]"><span>Expense moved to recently removed.</span><button onClick={() => void undoExpenseDelete()} className="font-semibold underline">Undo</button></div>}
-    <section className="card p-5">
-      <div className="mb-3 flex items-center justify-between"><h2 className="serif text-xl text-[#493628]">Recent expenses</h2><span className="text-xs text-[#735E49]">{rows.length} records</span></div>
-      {!loaded ? <p className="py-8 text-center text-sm text-[#735E49]">Loading expenses…</p> : rows.length === 0 ? <EmptyState title="A fresh page" body="Expenses you add will appear here, shared with your partner."/> : <div className="divide-y divide-[#EEE5DA]">{rows.map((row) => <div className="flex items-center gap-3 py-3" key={row.id}><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#735E49]"><ReceiptText size={18}/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold capitalize text-[#493628]">{row.merchant || row.category.replaceAll("_"," ")}</p><p className="text-xs text-[#735E49]">{formatDate(row.expense_date)}{row.description ? " · " + row.description : ""}</p></div><div className="text-right"><p className="text-sm font-semibold text-[#493628]">{formatCurrency(Number(row.amount))}</p><button onClick={() => void softDelete(row.id)} className="text-xs text-[#735E49] underline">Remove</button></div></div>)}</div>}
+    <section className="card p-5"><div className="mb-3 flex items-center justify-between"><div><h2 className="serif text-xl text-[#493628]">Previous consultations</h2><p className="text-xs text-[#735E49]">Open a visit to see its notes and attached documents, or edit it.</p></div><span className="text-xs text-[#735E49]">{visits.length} records</span></div>
+      {!loaded?<p className="py-6 text-sm text-[#735E49]">Loading…</p>:visits.length===0?<EmptyState title="No consultations yet" body="Add a visit above. Saved visits stay here for future viewing and editing."/>:<div className="divide-y divide-[#EEE5DA]">{visits.map(v=>{const expandedNow=expanded===v.id;const attached=docs.filter(d=>d.consultation_id===v.id);return <article key={v.id} className="py-3"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#735E49]"><Heart size={18}/></span><button type="button" onClick={()=>setExpanded(expandedNow?null:v.id)} className="min-w-0 flex-1 text-left"><p className="truncate text-sm font-semibold text-[#493628]">{v.doctor_name?"Dr. "+v.doctor_name:"Consultation"}{v.hospital?" · "+v.hospital:""}</p><p className="text-xs text-[#735E49]">{formatDate(v.consultation_date)}{v.pregnancy_week?" · Week "+v.pregnancy_week:""}</p></button><div className="text-right"><p className="text-sm font-semibold text-[#493628]">{v.fee_amount!==null?formatCurrency(Number(v.fee_amount)):"—"}</p><button type="button" onClick={()=>openVisit(v)} className="text-xs font-semibold underline text-[#76583C]">Open / edit</button></div></div>
+      {expandedNow&&<div className="mt-3 rounded-xl bg-[#F8F3EC] p-4 text-sm text-[#594936]">{v.speciality&&<p><b>Speciality:</b> {v.speciality}</p>}{v.reason&&<p className="mt-2"><b>Reason:</b> {v.reason}</p>}{v.notes&&<p className="mt-2 whitespace-pre-wrap"><b>Notes:</b> {v.notes}</p>}{v.advice&&<p className="mt-2 whitespace-pre-wrap"><b>Doctor's advice:</b> {v.advice}</p>}{v.follow_up_date&&<p className="mt-2"><b>Follow-up:</b> {formatDate(v.follow_up_date)}</p>}<div className="mt-3 border-t border-[#E8DDCF] pt-3"><b className="text-xs">ATTACHED DOCUMENTS ({attached.length})</b>{attached.length?attached.map(d=><div key={d.id} className="mt-2 flex justify-between gap-2"><span className="truncate text-xs">{d.title}</span><button type="button" onClick={()=>void openDoc(d.storage_path)} className="btn-secondary px-3 py-1 text-xs">Open</button></div>):<p className="mt-1 text-xs">No files attached.</p>}</div><div className="mt-3 flex justify-end gap-3"><button type="button" onClick={()=>openVisit(v)} className="text-xs underline">Edit visit</button><button type="button" onClick={()=>void removeVisit(v)} className="text-xs underline text-[#8A5148]">Remove</button></div></div>}</article>})}</div>}
     </section>
+    <form onSubmit={addExpense} className="card p-5"><h2 className="serif mb-4 text-xl text-[#493628]">Add other medical expense</h2><div className="grid gap-3 sm:grid-cols-2">
+      <label><span className="field-label">Amount (₹)</span><input className="input" type="number" min="0.01" step="0.01" required value={amount} onChange={e=>setAmount(e.target.value)}/></label>
+      <label><span className="field-label">Date</span><input className="input" type="date" required value={date} onChange={e=>setDate(e.target.value)}/></label>
+      <label><span className="field-label">Category</span><select className="input" value={category} onChange={e=>setCategory(e.target.value as Expense["category"])}>{categories.map(c=><option key={c} value={c}>{c.replaceAll("_"," ")}</option>)}</select></label>
+      <label><span className="field-label">Hospital / merchant</span><input className="input" value={merchant} onChange={e=>setMerchant(e.target.value)} maxLength={140}/></label>
+      <label className="sm:col-span-2"><span className="field-label">Description</span><input className="input" value={description} onChange={e=>setDescription(e.target.value)} maxLength={1000}/></label>
+    </div><button className="btn-primary mt-4" disabled={busy}>{busy?"Adding…":"Add expense"}</button></form>
+    {removed&&<div role="status" className="rounded-xl bg-[#E8EFE4] px-4 py-3 text-sm text-[#405A3B]">Expense removed. <button onClick={()=>void undo()} className="font-semibold underline">Undo</button></div>}
+    <section className="card p-5"><h2 className="serif mb-3 text-xl text-[#493628]">Other expenses</h2>{expenses.filter(x=>!x.consultation_id).length===0?<p className="text-sm text-[#735E49]">No other expenses recorded.</p>:expenses.filter(x=>!x.consultation_id).map(x=><div key={x.id} className="flex items-center gap-3 border-t border-[#EEE5DA] py-3"><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-[#493628]">{x.merchant||x.category.replaceAll("_"," ")}</p><p className="text-xs text-[#735E49]">{formatDate(x.expense_date)} · {x.description||""}</p></div><div className="text-right"><p className="text-sm font-semibold">{formatCurrency(Number(x.amount))}</p><button onClick={()=>void removeExpense(x.id)} className="text-xs underline">Remove</button></div></div>)}</section>
   </div>;
 }
 
