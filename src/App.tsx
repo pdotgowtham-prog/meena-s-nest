@@ -114,6 +114,25 @@ function AuthScreen() {
   </main>;
 }
 
+function PasswordResetScreen() {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+  async function submit(event: FormEvent) {
+    event.preventDefault(); setError("");
+    if (password.length < 8) { setError("Use at least 8 characters."); return; }
+    if (password !== confirm) { setError("The passwords do not match."); return; }
+    setBusy(true);
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    if (updateError) setError(updateError.message);
+    else { setDone(true); const url = new URL(window.location.href); url.searchParams.delete("password-reset"); window.history.replaceState({}, "", url.pathname + url.search + url.hash); }
+    setBusy(false);
+  }
+  return <main className="flex min-h-screen items-center justify-center px-4 py-10"><section className="card paper w-full max-w-md p-7 md:p-9"><div className="mb-5 flex items-center gap-2 text-[#76583C]"><Heart size={20}/><span className="serif text-2xl">{APP_NAME}</span></div><h1 className="serif text-3xl text-[#493628]">{done ? "Password updated" : "Choose a new password"}</h1><p className="mt-2 text-sm leading-6 text-[#735E49]">{done ? "Your password has been changed. You can continue to your private space." : "Create a new password for your account."}</p>{!done && <form onSubmit={submit} className="mt-6 space-y-4"><label className="block"><span className="field-label">New password</span><input className="input" type="password" minLength={8} autoComplete="new-password" required value={password} onChange={e => setPassword(e.target.value)}/></label><label className="block"><span className="field-label">Confirm new password</span><input className="input" type="password" minLength={8} autoComplete="new-password" required value={confirm} onChange={e => setConfirm(e.target.value)}/></label>{error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">{error}</p>}<button className="btn-primary w-full" disabled={busy} type="submit">{busy ? "Updating…" : "Update password"}</button></form>}{done && <button className="btn-primary mt-6 w-full" onClick={() => window.location.assign(window.location.origin)}>Continue to Meena’s Nest</button>}</section></main>;
+}
+
 function WorkspaceSetup({ userId, onCreated }: { userId: string; onCreated: () => void }) {
   const [name, setName] = useState("Our little nest");
   const [busy, setBusy] = useState(false);
