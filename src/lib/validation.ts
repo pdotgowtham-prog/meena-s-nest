@@ -25,5 +25,5 @@ export const vaultSchema = z.object({
   title: z.string().trim().min(1, "Add a document title.").max(140),
   category: z.enum(["scan","lab_report","prescription","insurance","discharge_summary","other"]),
   fileSize: z.number().int().positive().max(10 * 1024 * 1024, "Files must be 10 MB or smaller."),
-  mimeType: z.enum(["application/pdf","image/jpeg","image/png","image/webp"])
+  mimeType: z.enum(["application/pdf","image/jpeg","image/png","image/webp","image/heic","image/heif"])
 });
