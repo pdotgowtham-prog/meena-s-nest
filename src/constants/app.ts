@@ -7,5 +7,7 @@ export const ALLOWED_DOCUMENT_TYPES = [
   "application/pdf",
   "image/jpeg",
   "image/png",
-  "image/webp"
+  "image/webp",
+  "image/heic",
+  "image/heif"
 ] as const;
