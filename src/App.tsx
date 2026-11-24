@@ -300,7 +300,7 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
   const [week,setWeek]=useState(""); const [doctor,setDoctor]=useState(""); const [speciality,setSpeciality]=useState("");
   const [hospital,setHospital]=useState(""); const [reason,setReason]=useState(""); const [notes,setNotes]=useState("");
   const [advice,setAdvice]=useState(""); const [followUp,setFollowUp]=useState(""); const [fee,setFee]=useState("");
-  const [payment,setPayment]=useState("upi"); const [file,setFile]=useState<File|null>(null);
+  const [payment,setPayment]=useState("upi"); const [files,setFiles]=useState<File[]>([]);
   const [amount,setAmount]=useState(""); const [date,setDate]=useState(localToday());
   const [category,setCategory]=useState<Expense["category"]>("scan"); const [merchant,setMerchant]=useState(""); const [description,setDescription]=useState("");
   const [busy,setBusy]=useState(false); const [error,setError]=useState(""); const [loaded,setLoaded]=useState(false); const [expanded,setExpanded]=useState<string|null>(null);
@@ -315,14 +315,14 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
     setExpenses(a.data??[]); setVisits(b.data??[]); setDocs(c.data??[]); setLoaded(true);
   },[workspace.id]);
   useEffect(()=>{void load();},[load]);
-  function clearForm(){setEditing(null);setVisitDate(localToday());setWeek("");setDoctor("");setSpeciality("");setHospital("");setReason("");setNotes("");setAdvice("");setFollowUp("");setFee("");setPayment("upi");setFile(null);const el=document.getElementById("visit-file") as HTMLInputElement|null;if(el)el.value="";}
-  function openVisit(v:Consultation){setEditing(v);setVisitDate(v.consultation_date);setWeek(v.pregnancy_week?.toString()??"");setDoctor(v.doctor_name??"");setSpeciality(v.speciality??"");setHospital(v.hospital??"");setReason(v.reason??"");setNotes(v.notes??"");setAdvice(v.advice??"");setFollowUp(v.follow_up_date??"");setFee(v.fee_amount?.toString()??"");setPayment(v.payment_method??"upi");setExpanded(v.id);setFile(null);window.scrollTo({top:0,behavior:"smooth"});}
+  function clearForm(){setEditing(null);setVisitDate(localToday());setWeek("");setDoctor("");setSpeciality("");setHospital("");setReason("");setNotes("");setAdvice("");setFollowUp("");setFee("");setPayment("upi");setFiles([]);const el=document.getElementById("visit-files") as HTMLInputElement|null;if(el)el.value="";}
+  function openVisit(v:Consultation){setEditing(v);setVisitDate(v.consultation_date);setWeek(v.pregnancy_week?.toString()??"");setDoctor(v.doctor_name??"");setSpeciality(v.speciality??"");setHospital(v.hospital??"");setReason(v.reason??"");setNotes(v.notes??"");setAdvice(v.advice??"");setFollowUp(v.follow_up_date??"");setFee(v.fee_amount?.toString()??"");setPayment(v.payment_method??"upi");setExpanded(v.id);setFiles([]);const el=document.getElementById("visit-files") as HTMLInputElement|null;if(el)el.value="";window.scrollTo({top:0,behavior:"smooth"});}
   async function openDoc(path:string){const {data,error:e}=await supabase.storage.from(VAULT_BUCKET).createSignedUrl(path,60);if(e)setError(e.message);else if(data?.signedUrl)window.open(data.signedUrl,"_blank","noopener,noreferrer");}
   async function saveVisit(event:FormEvent){
     event.preventDefault();const f=fee.trim()?Number(fee):null;
     if(f!==null&&(!Number.isFinite(f)||f<0||f>99999999.99)){setError("Enter a valid consultation fee.");return;}
     if(week&&(!Number.isInteger(Number(week))||Number(week)<1||Number(week)>45)){setError("Pregnancy week must be between 1 and 45.");return;}
-    if(file&&(!["application/pdf","image/jpeg","image/png","image/webp"].includes(file.type)||file.size>10*1024*1024)){setError("Use a PDF or image up to 10 MB.");return;}
+    const invalidFile=files.find(file=>!["application/pdf","image/jpeg","image/png","image/webp"].includes(file.type)||file.size>10*1024*1024);if(invalidFile){setError("Each attachment must be a PDF or image up to 10 MB: "+invalidFile.name);return;}
     setBusy(true);setError("");
     const payload={workspace_id:workspace.id,created_by:editing?.created_by??userId,consultation_date:visitDate,pregnancy_week:week?Number(week):null,doctor_name:doctor.trim()||null,speciality:speciality.trim()||null,hospital:hospital.trim()||null,reason:reason.trim()||null,notes:notes.trim()||null,advice:advice.trim()||null,follow_up_date:followUp||null,fee_amount:f,payment_method:f===null?null:payment};
     const result=editing?await supabase.from("consultations").update(payload).eq("id",editing.id).select("*").single():await supabase.from("consultations").insert(payload).select("*").single();
@@ -332,10 +332,7 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
       const feeResult=oldFee?await supabase.from("expenses").update(feeRow).eq("id",oldFee.id):await supabase.from("expenses").insert(feeRow);
       if(feeResult.error)setError("Visit saved; fee entry issue: "+feeResult.error.message);
     }else if(oldFee){await supabase.from("expenses").update({deleted_at:new Date().toISOString()}).eq("id",oldFee.id);}
-    if(file){const path=workspace.id+"/"+crypto.randomUUID();const up=await supabase.storage.from(VAULT_BUCKET).upload(path,file,{contentType:file.type});
-      if(up.error)setError("Visit saved; file upload failed: "+up.error.message);
-      else{const d=await supabase.from("vault_documents").insert({workspace_id:workspace.id,created_by:userId,title:file.name,category:file.type==="application/pdf"?"lab_report":"prescription",file_name:file.name,storage_path:path,mime_type:file.type,size_bytes:file.size,document_date:visitDate,notes:"Attached to consultation",consultation_id:visit.id});if(d.error){await supabase.storage.from(VAULT_BUCKET).remove([path]);setError("Visit saved; attachment record failed: "+d.error.message);}}
-    }
+    const failedFiles:string[]=[];for(const file of files){const path=workspace.id+"/"+crypto.randomUUID();const up=await supabase.storage.from(VAULT_BUCKET).upload(path,file,{contentType:file.type});if(up.error){failedFiles.push(file.name+" ("+up.error.message+")");continue;}const d=await supabase.from("vault_documents").insert({workspace_id:workspace.id,created_by:userId,title:file.name,category:file.type==="application/pdf"?"lab_report":"prescription",file_name:file.name,storage_path:path,mime_type:file.type,size_bytes:file.size,document_date:visitDate,notes:"Attached to consultation",consultation_id:visit.id});if(d.error){await supabase.storage.from(VAULT_BUCKET).remove([path]);failedFiles.push(file.name+" ("+d.error.message+")");}}if(failedFiles.length)setError("Visit saved, but these attachments could not be added: "+failedFiles.join("; "));
     clearForm();await load();setBusy(false);
   }
   async function addExpense(event:FormEvent){event.preventDefault();const p=expenseSchema.safeParse({amount,expense_date:date,category,merchant,description});if(!p.success){setError(p.error.issues[0]?.message??"Check expense details.");return;}setBusy(true);setError("");const {error:e}=await supabase.from("expenses").insert({workspace_id:workspace.id,created_by:userId,amount:p.data.amount,expense_date:p.data.expense_date,category:p.data.category,merchant:p.data.merchant||null,description:p.data.description||null,currency:"INR"});if(e)setError(e.message);else{setAmount("");setMerchant("");setDescription("");await load();}setBusy(false);}
@@ -361,7 +358,7 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
         <label className="sm:col-span-2"><span className="field-label">Consultation notes</span><textarea className="input min-h-20" value={notes} onChange={e=>setNotes(e.target.value)} maxLength={4000} placeholder="What was discussed during the visit?"/></label>
         <label className="sm:col-span-2"><span className="field-label">Doctor's advice / medicines / next steps</span><textarea className="input min-h-20" value={advice} onChange={e=>setAdvice(e.target.value)} maxLength={4000}/></label>
         <label><span className="field-label">Follow-up date</span><input className="input" type="date" value={followUp} onChange={e=>setFollowUp(e.target.value)}/></label>
-        <label><span className="field-label">Attach prescription, scan or bill (PDF/photo, max 10 MB)</span><input id="visit-file" className="input" type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
+        <label className="sm:col-span-2"><span className="field-label">Attach documents (select multiple PDFs/photos, max 10 MB each)</span><input id="visit-files" className="input" type="file" multiple accept=".pdf,image/jpeg,image/png,image/webp" onChange={e=>setFiles(Array.from(e.target.files??[]))}/><span className="mt-1 block text-xs text-[#735E49]">You can select several files at once. Existing attachments stay linked when you edit a visit.</span>{files.length>0&&<span className="mt-2 block text-xs text-[#48623F]">{files.length} file{files.length===1?"":"s"} selected: {files.map(file=>file.name).join(", ")}</span>}</label>
       </div>
       {error&&<p role="alert" className="mt-3 text-sm text-red-800">{error}</p>}
       <button className="btn-primary mt-4" disabled={busy}>{busy?"Saving securely…":editing?"Save changes":"Save consultation"}</button>
