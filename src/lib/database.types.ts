@@ -49,6 +49,7 @@ export type Database = {
     Functions: {
       create_workspace: { Args: { p_name: string }; Returns: string };
       accept_workspace_invite: { Args: { p_token: string }; Returns: string };
+      soft_delete_consultation: { Args: { p_consultation_id: string }; Returns: undefined };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
