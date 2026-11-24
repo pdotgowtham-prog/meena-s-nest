@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   ArrowRight, Baby, CalendarDays, Check, ChevronRight, CircleHelp,
-  Copy, FileText, Heart, LogOut, Mail, Plus, ReceiptText, Settings,
+  Copy, FileText, Heart, LogOut, Mail, Settings,
   ShieldCheck, Sparkles, UploadCloud, Users, Wallet, X, Moon, Sun
 } from "lucide-react";
 import { APP_NAME, VAULT_BUCKET } from "./constants/app";
@@ -37,7 +37,6 @@ function NavGlyph({ name }: { name: (typeof navItems)[number]["icon"] }) {
 
 function AuthScreen() {
   const [mode, setMode] = useState<"login" | "signup">("login");
-  const [resetSent, setResetSent] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -45,13 +44,12 @@ function AuthScreen() {
   const [error, setError] = useState("");
 
   async function requestPasswordReset() {
-    setBusy(true); setError(""); setNotice(""); setResetSent(false);
+    setBusy(true); setError(""); setNotice("");
     const parsed = authSchema.shape.email.safeParse(email);
     if (!parsed.success) { setError("Enter your account email address first."); setBusy(false); return; }
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(parsed.data, { redirectTo: `${window.location.origin}/?password-reset=1` });
       if (resetError) throw resetError;
-      setResetSent(true);
       setNotice("If an account exists for this email, a password reset link has been sent. Check your inbox and spam folder.");
     } catch (err) { setError(err instanceof Error ? err.message : "Unable to send the reset email. Please try again."); }
     finally { setBusy(false); }
@@ -330,7 +328,7 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
     const result=editing?await supabase.from("consultations").update(payload).eq("id",editing.id).select("*").single():await supabase.from("consultations").insert(payload).select("*").single();
     if(result.error||!result.data){setError(result.error?.message??"Could not save consultation.");setBusy(false);return;}
     const visit=result.data;const oldFee=expenses.find(x=>x.consultation_id===visit.id);
-    if(f!==null&&f>0){const feeRow={workspace_id:workspace.id,created_by:editing?.created_by??userId,expense_date:visitDate,amount:f,currency:"INR",category:"consultation",merchant:hospital||doctor||"Consultation",description:"Consultation fee",consultation_id:visit.id};
+    if(f!==null&&f>0){const feeRow={workspace_id:workspace.id,created_by:editing?.created_by??userId,expense_date:visitDate,amount:f,currency:"INR" as const,category:"consultation",merchant:hospital||doctor||"Consultation",description:"Consultation fee",consultation_id:visit.id};
       const feeResult=oldFee?await supabase.from("expenses").update(feeRow).eq("id",oldFee.id):await supabase.from("expenses").insert(feeRow);
       if(feeResult.error)setError("Visit saved; fee entry issue: "+feeResult.error.message);
     }else if(oldFee){await supabase.from("expenses").update({deleted_at:new Date().toISOString()}).eq("id",oldFee.id);}
