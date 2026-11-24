@@ -350,26 +350,17 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
   async function undo(){if(!removed)return;const {error:e}=await supabase.from("expenses").update({deleted_at:null}).eq("id",removed.id);if(e){setError(e.message);return;}if(removedDocIds.length){const {error:de}=await supabase.from("vault_documents").update({deleted_at:null}).in("id",removedDocIds);if(de)setError("Expense restored, but its documents could not all be restored: "+de.message);}setRemoved(null);setRemovedDocIds([]);await load();}
   async function removeVisit(v:Consultation){
     setError("");
-    const stamp=new Date().toISOString();
-    const linkedDocs=docs.filter(d=>d.consultation_id===v.id&&!d.deleted_at);
-    const linkedFee=expenses.find(x=>x.consultation_id===v.id&&!x.deleted_at);
-    const docIds=linkedDocs.map(d=>d.id);
-    if(docIds.length){
-      const {error:docError}=await supabase.from("vault_documents").update({deleted_at:stamp}).in("id",docIds);
-      if(docError){setError("Could not remove consultation documents: "+docError.message);return;}
-    }
-    if(linkedFee){
-      const {error:feeError}=await supabase.from("expenses").update({deleted_at:stamp}).eq("id",linkedFee.id);
-      if(feeError){if(docIds.length)await supabase.from("vault_documents").update({deleted_at:null}).in("id",docIds);setError("Could not remove consultation fee: "+feeError.message);return;}
-    }
-    const {error:e}=await supabase.from("consultations").update({deleted_at:stamp}).eq("id",v.id);
-    if(e){
-      if(linkedFee)await supabase.from("expenses").update({deleted_at:null}).eq("id",linkedFee.id);
-      if(docIds.length)await supabase.from("vault_documents").update({deleted_at:null}).in("id",docIds);
-      setError("Could not remove this consultation: "+e.message);return;
+    setBusy(true);
+    const { error: deleteError } = await supabase.rpc("soft_delete_consultation", { p_consultation_id: v.id });
+    if(deleteError){
+      setError("Could not remove this consultation: "+deleteError.message);
+      setBusy(false);
+      return;
     }
     if(editing?.id===v.id)clearForm();
+    setDeleteTarget(null);
     await load();
+    setBusy(false);
   }
   const total=expenses.reduce((n,x)=>n+Number(x.amount),0);
   const categories=["scan","lab_test","medicine","travel","nutrition","baby_items","insurance","other"];
