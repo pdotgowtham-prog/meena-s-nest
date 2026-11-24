@@ -36,6 +36,10 @@ export type Database = {
         { id: string; workspace_id: string; title: string; category: string; file_name: string; storage_path: string; mime_type: string; size_bytes: number; document_date: string | null; notes: string | null } & Audit,
         { id?: string; workspace_id: string; title: string; category: string; file_name: string; storage_path: string; mime_type: string; size_bytes: number; document_date?: string | null; notes?: string | null; created_by: string; created_at?: string; updated_at?: string; deleted_at?: string | null }
       >;
+      consultations: Table<
+        { id: string; workspace_id: string; consultation_date: string; pregnancy_week: number | null; doctor_name: string | null; speciality: string | null; hospital: string | null; reason: string | null; notes: string | null; advice: string | null; follow_up_date: string | null; fee_amount: number | null; payment_method: string | null } & Audit,
+        { id?: string; workspace_id: string; consultation_date?: string; pregnancy_week?: number | null; doctor_name?: string | null; speciality?: string | null; hospital?: string | null; reason?: string | null; notes?: string | null; advice?: string | null; follow_up_date?: string | null; fee_amount?: number | null; payment_method?: string | null; created_by: string; created_at?: string; updated_at?: string; deleted_at?: string | null }
+      >;
       expenses: Table<
         { id: string; workspace_id: string; expense_date: string; amount: number; currency: string; category: string; merchant: string | null; description: string | null; document_id: string | null } & Audit,
         { id?: string; workspace_id: string; expense_date?: string; amount: number; currency?: "INR"; category: string; merchant?: string | null; description?: string | null; document_id?: string | null; created_by: string; created_at?: string; updated_at?: string; deleted_at?: string | null }
