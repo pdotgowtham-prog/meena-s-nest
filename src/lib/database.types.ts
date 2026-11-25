@@ -40,6 +40,14 @@ export type Database = {
         { id: string; workspace_id: string; consultation_date: string; pregnancy_week: number | null; doctor_name: string | null; speciality: string | null; hospital: string | null; reason: string | null; notes: string | null; advice: string | null; follow_up_date: string | null; fee_amount: number | null; payment_method: string | null } & Audit,
         { id?: string; workspace_id: string; consultation_date?: string; pregnancy_week?: number | null; doctor_name?: string | null; speciality?: string | null; hospital?: string | null; reason?: string | null; notes?: string | null; advice?: string | null; follow_up_date?: string | null; fee_amount?: number | null; payment_method?: string | null; created_by: string; created_at?: string; updated_at?: string; deleted_at?: string | null }
       >;
+      memories: Table<
+        { id: string; workspace_id: string; created_by: string; memory_date: string; pregnancy_week: number | null; title: string; story: string; location: string | null; mood: string | null; storage_path: string | null; file_name: string | null; mime_type: string | null; created_at: string; updated_at: string; deleted_at: string | null },
+        { id?: string; workspace_id: string; created_by: string; memory_date?: string; pregnancy_week?: number | null; title?: string; story?: string; location?: string | null; mood?: string | null; storage_path?: string | null; file_name?: string | null; mime_type?: string | null; created_at?: string; updated_at?: string; deleted_at?: string | null }
+      >;
+      memory_comments: Table<
+        { id: string; workspace_id: string; memory_id: string; created_by: string; body: string; created_at: string; deleted_at: string | null },
+        { id?: string; workspace_id: string; memory_id: string; created_by: string; body: string; created_at?: string; deleted_at?: string | null }
+      >;
       expenses: Table<
         { id: string; workspace_id: string; expense_date: string; amount: number; currency: string; category: string; merchant: string | null; description: string | null; document_id: string | null; consultation_id: string | null } & Audit,
         { id?: string; workspace_id: string; expense_date?: string; amount: number; currency?: "INR"; category: string; merchant?: string | null; description?: string | null; document_id?: string | null; consultation_id?: string | null; created_by: string; created_at?: string; updated_at?: string; deleted_at?: string | null }
