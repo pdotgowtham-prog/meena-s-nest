@@ -664,9 +664,10 @@ export default function App() {
   if (!session) return <AuthScreen/>;
   if (!workspace) return <><WorkspaceSetup userId={session.user.id} onCreated={() => loadWorkspace(session.user.id)}/>{error && <p role="alert" className="fixed bottom-5 left-4 right-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}</p>}</>;
 
+  const headerAge = profile?.lmp_date ? calculateGestationalAge(profile.lmp_date, localToday()) : null;
   return <div className="min-h-screen pb-28">
     <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-8">
-      <div className="flex items-center gap-3"><img src="/nest-icon.svg" alt="Meena’s Nest logo" className="h-11 w-11 rounded-xl object-cover shadow-sm"/><div><p className="serif text-xl leading-none text-[#493628]">{APP_NAME}</p><p className="mt-1 text-[11px] text-[#735E49]">{profile?.lmp_date ? "Trimester " + trimesterForWeek(calculateGestationalAge(profile.lmp_date, localToday()).weeks) + " · Week " + calculateGestationalAge(profile.lmp_date, localToday()).weeks : workspace.name}</p></div></div>
+      <div className="flex items-center gap-3"><img src="/nest-icon.svg" alt="Meena’s Nest logo" className="h-11 w-11 rounded-xl object-cover shadow-sm"/><div><p className="serif text-xl leading-none text-[#493628]">{APP_NAME}</p><p className="mt-1 text-[11px] text-[#735E49]">{headerAge ? "Trimester " + trimesterForWeek(headerAge.weeks) + " · Week " + headerAge.weeks : workspace.name}</p></div></div>
       <div className="flex items-center gap-2"><span className="hidden rounded-full bg-[#E8EFE4] px-3 py-2 text-xs font-semibold text-[#48623F] sm:inline-flex"><ShieldCheck size={14} className="mr-1"/>Private space</span><button onClick={() => setSettingsOpen(true)} aria-label="Open settings" className="grid h-10 w-10 place-items-center rounded-full border border-[#E8DDCF] bg-white text-[#76583C]"><Settings size={18}/></button></div>
     </header>
     <main className="mx-auto max-w-6xl px-4 pb-10 md:px-8">
