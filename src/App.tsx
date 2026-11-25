@@ -699,7 +699,7 @@ function MorePage({ email, workspaceId, onSignOut, darkMode, onToggleTheme }: { 
       const memories=mem.data??[];
       const commentsResult=memories.length?await supabase.from("memory_comments").select("*").in("memory_id",memories.map(x=>x.id)).is("deleted_at",null).order("created_at"):{data:[],error:null};
       if(commentsResult.error)throw commentsResult.error;
-      const commentsByMemory:Record<string,typeof commentsResult.data>={};
+      const commentsByMemory:Record<string,Database["public"]["Tables"]["memory_comments"]["Row"][]>={};
       for(const comment of commentsResult.data??[])(commentsByMemory[comment.memory_id]??=[]).push(comment);
       const esc=(v:unknown)=>String(v??"").replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[ch]??ch));
       let body="";
