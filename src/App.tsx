@@ -15,6 +15,7 @@ import type { Database } from "./lib/database.types";
 type Profile = Database["public"]["Tables"]["pregnancy_profiles"]["Row"];
 type Page = "home" | "expenses" | "memories" | "vault" | "family";
 type Workspace = { id: string; name: string; role: "owner" | "partner" };
+type Medicine = { name: string; dosage: string; schedule: string; instructions: string };
 
 const navItems: { id: Page; label: string; icon: "home" | "expenses" | "vault" | "family" | "memories" }[] = [
   { id: "home", label: "Home", icon: "home" },
