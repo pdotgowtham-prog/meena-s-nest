@@ -8,6 +8,6 @@
   "background_color": "#FBF6EE",
   "theme_color": "#FBF6EE",
   "icons": [
-    { "src": "/nest-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/nest-icon.svg", "sizes": "192x192 512x512", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
