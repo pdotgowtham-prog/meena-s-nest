@@ -33,5 +33,5 @@ create table if not exists public.memory_comments (
 create index if not exists memory_comments_memory_idx on public.memory_comments(memory_id,created_at) where deleted_at is null;
 alter table public.memory_comments enable row level security;
 create policy memory_comments_select_member on public.memory_comments for select to authenticated using(private.is_workspace_member(workspace_id) and deleted_at is null);
-create policy memory_comments_insert_member on public.memory_comments for insert to authenticated with check(private.is_workspace_member(workspace_id) and created_by=(select auth.uid()) and exists(select 1 from public.memories m where m.id=memory_id and m.workspace_id=workspace_id and m.deleted_at is null));
+create policy memory_comments_insert_member on public.memory_comments for insert to authenticated with check(private.is_workspace_member(workspace_id) and created_by=(select auth.uid()) and exists(select 1 from public.memories m where m.id=memory_comments.memory_id and m.workspace_id=memory_comments.workspace_id and m.deleted_at is null));
 grant select,insert on public.memory_comments to authenticated;
