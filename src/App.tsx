@@ -13,15 +13,15 @@ import { EmptyState, Illustration } from "./components/Illustration";
 import type { Database } from "./lib/database.types";
 
 type Profile = Database["public"]["Tables"]["pregnancy_profiles"]["Row"];
-type Page = "home" | "expenses" | "vault" | "family" | "more";
+type Page = "home" | "expenses" | "memories" | "vault" | "family";
 type Workspace = { id: string; name: string; role: "owner" | "partner" };
 
-const navItems: { id: Page; label: string; icon: "home" | "expenses" | "vault" | "family" | "more" }[] = [
+const navItems: { id: Page; label: string; icon: "home" | "expenses" | "vault" | "family" | "memories" }[] = [
   { id: "home", label: "Home", icon: "home" },
-  { id: "expenses", label: "Expenses", icon: "expenses" },
+  { id: "expenses", label: "Visits", icon: "expenses" },
+  { id: "memories", label: "Memories", icon: "memories" },
   { id: "vault", label: "Vault", icon: "vault" },
   { id: "family", label: "Family", icon: "family" },
-  { id: "more", label: "More", icon: "more" }
 ];
 
 function NavGlyph({ name }: { name: (typeof navItems)[number]["icon"] }) {
@@ -30,7 +30,7 @@ function NavGlyph({ name }: { name: (typeof navItems)[number]["icon"] }) {
     expenses: "M5 3h14v18H5zM8 7h8M8 11h8M8 15h5",
     vault: "M3 7.5h7l2 2H21v10H3zM3 7.5V5h8l2 2",
     family: "M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 18.5V20M10 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 4.5a3 3 0 0 1 0 5.8M20 20v-1.5a4.5 4.5 0 0 0-3.2-4.3",
-    more: "M4 6h16M4 12h16M4 18h16"
+    memories: "M12 21s-8-4.5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.5-8 11-8 11"
   };
   return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d={paths[name]} /></svg>;
 }
@@ -639,7 +639,7 @@ export default function App() {
 
   return <div className="min-h-screen pb-28">
     <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-8">
-      <div className="flex items-center gap-3"><img src="/nest-icon.svg" alt="Meena’s Nest logo" className="h-11 w-11 rounded-xl object-cover shadow-sm"/><div><p className="serif text-xl leading-none text-[#493628]">{APP_NAME}</p><p className="mt-1 text-[11px] text-[#735E49]">{workspace.name}</p></div></div>
+      <div className="flex items-center gap-3"><img src="/nest-icon.svg" alt="Meena’s Nest logo" className="h-11 w-11 rounded-xl object-cover shadow-sm"/><div><p className="serif text-xl leading-none text-[#493628]">{APP_NAME}</p><p className="mt-1 text-[11px] text-[#735E49]">{profile?.lmp_date ? "Trimester " + trimesterForWeek(calculateGestationalAge(profile.lmp_date, localToday()).weeks) + " · Week " + calculateGestationalAge(profile.lmp_date, localToday()).weeks : workspace.name}</p></div></div>
       <div className="flex items-center gap-2"><span className="hidden rounded-full bg-[#E8EFE4] px-3 py-2 text-xs font-semibold text-[#48623F] sm:inline-flex"><ShieldCheck size={14} className="mr-1"/>Private space</span><button onClick={() => setPage("more")} aria-label="Open settings" className="grid h-10 w-10 place-items-center rounded-full border border-[#E8DDCF] bg-white text-[#76583C]"><Settings size={18}/></button></div>
     </header>
     <main className="mx-auto max-w-6xl px-4 pb-10 md:px-8">
