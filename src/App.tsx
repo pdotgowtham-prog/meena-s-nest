@@ -232,6 +232,18 @@ function Dashboard({ workspace, profile, userId, onProfileSaved, onNavigate }: {
   const dueDays = profile?.due_date ? daysUntilDue(profile.due_date, localToday()) : null;
   const sizeGuide = week < 8 ? "blueberry" : week < 12 ? "lime" : week < 16 ? "avocado" : week < 20 ? "banana" : week < 24 ? "papaya" : week < 28 ? "eggplant" : week < 32 ? "coconut" : week < 36 ? "pineapple" : "small watermelon";
   const trimester = trimesterForWeek(week);
+  const [latestMemory,setLatestMemory] = useState<Database["public"]["Tables"]["memories"]["Row"] | null>(null);
+  const [latestMemoryUrl,setLatestMemoryUrl] = useState("");
+  useEffect(() => {
+    let live=true;
+    supabase.from("memories").select("*").eq("workspace_id",workspace.id).is("deleted_at",null).order("memory_date",{ascending:false}).limit(1).maybeSingle().then(async ({data})=>{
+      if(!live)return;
+      const row=(data??null) as Database["public"]["Tables"]["memories"]["Row"] | null;
+      setLatestMemory(row);
+      if(row?.storage_path){const {data: signed}=await supabase.storage.from(VAULT_BUCKET).createSignedUrl(row.storage_path,60);if(live&&signed?.signedUrl)setLatestMemoryUrl(signed.signedUrl);}
+    });
+    return ()=>{live=false;};
+  },[workspace.id]);
   const milestones = [
     { label: "12 weeks", active: week >= 12 },
     { label: "Halfway", active: week >= 20 },
@@ -280,6 +292,10 @@ function Dashboard({ workspace, profile, userId, onProfileSaved, onNavigate }: {
       <summary className="flex cursor-pointer list-none items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">Profile settings</p><h2 className="serif mt-1 text-xl text-[#493628]">Edit journey details</h2></div><ChevronRight size={18} className="text-[#735E49]"/></summary>
       <div className="mt-5"><ProfileForm workspaceId={workspace.id} userId={userId} profile={profile} onSaved={onProfileSaved}/></div>
     </details>}
+    <section className="card overflow-hidden p-5">
+      <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[.16em] text-[#735E49]">From your memory book</p><h2 className="serif mt-1 text-xl text-[#493628]">Your latest little moment</h2></div><button type="button" onClick={() => onNavigate("memories")} className="text-xs font-semibold text-[#76583C] underline">View memories</button></div>
+      {latestMemory ? <div className="mt-3 flex items-center gap-4">{latestMemoryUrl&&<img src={latestMemoryUrl} alt="" className="h-20 w-20 rounded-2xl object-cover"/>}<div className="min-w-0"><p className="font-semibold text-[#493628]">{latestMemory.title||"A little memory"}</p><p className="mt-1 text-xs text-[#735E49]">{formatDate(latestMemory.memory_date)}{latestMemory.pregnancy_week?" · Week "+latestMemory.pregnancy_week:""}</p><p className="mt-2 line-clamp-2 text-sm text-[#735E49]">{latestMemory.story||"A moment saved for later."}</p></div></div> : <div className="mt-3 rounded-xl bg-[#F8F3EC] p-4"><p className="text-sm text-[#735E49]">Your memory book is waiting for its first photo or little story.</p><button type="button" onClick={() => onNavigate("memories")} className="btn-secondary mt-3 text-xs">Add a memory</button></div>}
+    </section>
     <section className="grid gap-4 sm:grid-cols-2">
       <button onClick={() => onNavigate("expenses")} className="card flex items-center gap-4 p-5 text-left transition hover:-translate-y-0.5"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#F7E8E3] text-[#986A5B]"><Wallet size={22}/></span><span className="flex-1"><strong className="block text-[#493628]">Pregnancy expenses</strong><span className="text-sm text-[#735E49]">Keep the little costs organised</span></span><ArrowRight size={17}/></button>
       <button onClick={() => onNavigate("vault")} className="card flex items-center gap-4 p-5 text-left transition hover:-translate-y-0.5"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#E8EFE4] text-[#58704F]"><FileText size={22}/></span><span className="flex-1"><strong className="block text-[#493628]">Private document vault</strong><span className="text-sm text-[#735E49]">Keep reports in one safe place</span></span><ArrowRight size={17}/></button>
@@ -405,6 +421,9 @@ function ExpensePage({ workspace, userId }: { workspace: Workspace; userId: stri
 
 function VaultPage({ workspace, userId }: { workspace: Workspace; userId: string }) {
   const [documents, setDocuments] = useState<Database["public"]["Tables"]["vault_documents"]["Row"][]>([]);
+  const [memoryFiles,setMemoryFiles] = useState<Database["public"]["Tables"]["memories"]["Row"][]>([]);
+  const [memoryUrls,setMemoryUrls] = useState<Record<string,string>>({});
+
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Database["public"]["Tables"]["vault_documents"]["Row"]["category"]>("other");
   const [file, setFile] = useState<File | null>(null);
@@ -414,8 +433,16 @@ function VaultPage({ workspace, userId }: { workspace: Workspace; userId: string
   const [removedDocument, setRemovedDocument] = useState<Database["public"]["Tables"]["vault_documents"]["Row"] | null>(null);
 
   const load = useCallback(async () => {
-    const { data, error: loadError } = await supabase.from("vault_documents").select("*").eq("workspace_id", workspace.id).is("deleted_at", null).order("created_at", { ascending: false });
-    if (loadError) setError(loadError.message); else setDocuments(data ?? []);
+    const [docsResult, memoriesResult] = await Promise.all([
+      supabase.from("vault_documents").select("*").eq("workspace_id", workspace.id).is("deleted_at", null).order("created_at", { ascending: false }),
+      supabase.from("memories").select("*").eq("workspace_id", workspace.id).is("deleted_at", null).not("storage_path","is",null).order("memory_date", { ascending: false })
+    ]);
+    if (docsResult.error || memoriesResult.error) setError(docsResult.error?.message || memoriesResult.error?.message || "Unable to load vault.");
+    setDocuments(docsResult.data ?? []);
+    const memories=(memoriesResult.data ?? []) as Database["public"]["Tables"]["memories"]["Row"][];
+    setMemoryFiles(memories);
+    const signed=await Promise.all(memories.map(async row=>{if(!row.storage_path)return [row.id,""] as const;const {data}=await supabase.storage.from(VAULT_BUCKET).createSignedUrl(row.storage_path,60);return [row.id,data?.signedUrl??""] as const;}));
+    setMemoryUrls(Object.fromEntries(signed));
     setLoaded(true);
   }, [workspace.id]);
   useEffect(() => { void load(); }, [load]);
@@ -475,6 +502,7 @@ function VaultPage({ workspace, userId }: { workspace: Workspace; userId: string
       <button className="btn-primary mt-4 inline-flex items-center gap-2" disabled={busy} type="submit"><UploadCloud size={16}/>{busy ? "Securing file…" : "Upload to private vault"}</button>
     </form>
     {removedDocument && <div role="status" className="flex items-center justify-between gap-3 rounded-xl bg-[#E8EFE4] px-4 py-3 text-sm text-[#405A3B]"><span>Document moved to recently removed. The file is retained.</span><button onClick={() => void undoDocumentDelete()} className="font-semibold underline">Undo</button></div>}
+    <section className="card p-5"><div className="mb-3 flex items-center justify-between"><h2 className="serif text-xl text-[#493628]">Memory keepsakes</h2><span className="text-xs text-[#735E49]">{memoryFiles.length} photos</span></div>{memoryFiles.length===0?<p className="text-sm text-[#735E49]">Photos saved in Memories will appear here.</p>:<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{memoryFiles.map(m=><article key={m.id} className="overflow-hidden rounded-xl bg-[#F8F3EC]">{memoryUrls[m.id]?<button type="button" onClick={()=>void openDocument(m.storage_path!)} className="block w-full"><img src={memoryUrls[m.id]} alt={m.title||"Memory"} className="h-36 w-full object-cover"/></button>:<div className="grid h-36 place-items-center text-xs text-[#735E49]">Preview unavailable</div>}<div className="p-3"><p className="truncate text-sm font-semibold text-[#493628]">{m.title||"Memory photo"}</p><p className="text-xs text-[#735E49]">{formatDate(m.memory_date)} · {m.pregnancy_week?"Week "+m.pregnancy_week:"Journey"}</p></div></article>)}</div>}</section>
     <section className="card p-5">
       <div className="mb-3 flex items-center justify-between"><h2 className="serif text-xl text-[#493628]">Your documents</h2><span className="text-xs text-[#735E49]">{documents.length} files</span></div>
       {!loaded ? <p className="py-8 text-center text-sm text-[#735E49]">Loading your vault…</p> : documents.length === 0 ? <EmptyState title="Nothing filed yet" body="Your uploaded reports and important documents will be listed here."/> : <div className="divide-y divide-[#EEE5DA]">{documents.map((row) => <div key={row.id} className="flex items-center gap-3 py-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#F5EFE6] text-[#735E49]"><FileText size={18}/></span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[#493628]">{row.title}</p><p className="text-xs capitalize text-[#735E49]">{row.category.replaceAll("_"," ")} · {(row.size_bytes / 1024 / 1024).toFixed(1)} MB</p></div><button className="btn-secondary px-3 py-2 text-xs" onClick={() => void openDocument(row.storage_path)}>Open</button><button aria-label={"Remove " + row.title} className="px-2 py-2 text-xs text-[#735E49]" onClick={() => void softDelete(row)}>Remove</button></div>)}</div>}
