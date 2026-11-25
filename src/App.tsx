@@ -567,6 +567,7 @@ function MorePage({ email, onSignOut, darkMode, onToggleTheme }: { email: string
 }
 
 export default function App() {
+  const [settingsOpen,setSettingsOpen]=useState(false);
   const [session, setSession] = useState<Awaited<ReturnType<typeof supabase.auth.getSession>>["data"]["session"]>(null);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -640,7 +641,7 @@ export default function App() {
   return <div className="min-h-screen pb-28">
     <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-8">
       <div className="flex items-center gap-3"><img src="/nest-icon.svg" alt="Meena’s Nest logo" className="h-11 w-11 rounded-xl object-cover shadow-sm"/><div><p className="serif text-xl leading-none text-[#493628]">{APP_NAME}</p><p className="mt-1 text-[11px] text-[#735E49]">{profile?.lmp_date ? "Trimester " + trimesterForWeek(calculateGestationalAge(profile.lmp_date, localToday()).weeks) + " · Week " + calculateGestationalAge(profile.lmp_date, localToday()).weeks : workspace.name}</p></div></div>
-      <div className="flex items-center gap-2"><span className="hidden rounded-full bg-[#E8EFE4] px-3 py-2 text-xs font-semibold text-[#48623F] sm:inline-flex"><ShieldCheck size={14} className="mr-1"/>Private space</span><button onClick={() => setPage("more")} aria-label="Open settings" className="grid h-10 w-10 place-items-center rounded-full border border-[#E8DDCF] bg-white text-[#76583C]"><Settings size={18}/></button></div>
+      <div className="flex items-center gap-2"><span className="hidden rounded-full bg-[#E8EFE4] px-3 py-2 text-xs font-semibold text-[#48623F] sm:inline-flex"><ShieldCheck size={14} className="mr-1"/>Private space</span><button onClick={() => setSettingsOpen(true)} aria-label="Open settings" className="grid h-10 w-10 place-items-center rounded-full border border-[#E8DDCF] bg-white text-[#76583C]"><Settings size={18}/></button></div>
     </header>
     <main className="mx-auto max-w-6xl px-4 pb-10 md:px-8">
       {error && <div role="alert" className="mb-4 flex items-center justify-between rounded-xl bg-red-50 p-3 text-sm text-red-800">{error}<button onClick={() => setError("")} aria-label="Dismiss error"><X size={16}/></button></div>}
@@ -648,8 +649,9 @@ export default function App() {
       {page === "expenses" && <ExpensePage workspace={workspace} userId={session.user.id}/>}
       {page === "vault" && <VaultPage workspace={workspace} userId={session.user.id}/>}
       {page === "family" && <FamilyPage workspace={workspace} userId={session.user.id}/>}
-      {page === "more" && <MorePage email={session.user.email ?? ""} onSignOut={() => void signOut()} darkMode={darkMode} onToggleTheme={() => setDarkMode((value) => !value)}/>}
+      {page === "memories" && <section className="card p-6"><p className="text-xs font-semibold uppercase tracking-wider text-[#735E49]">Little moments, kept forever</p><h1 className="serif mt-2 text-3xl text-[#493628]">Memories</h1><p className="mt-2 text-sm text-[#735E49]">Your private pregnancy journal is being prepared. Your photos and notes will live here.</p></section>}
     </main>
+    {settingsOpen && <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 p-3 sm:items-center" onClick={()=>setSettingsOpen(false)}><section className="card max-h-[85vh] w-full max-w-xl overflow-y-auto p-5" role="dialog" aria-modal="true" aria-label="Settings" onClick={e=>e.stopPropagation()}><div className="mb-4 flex items-center justify-between"><h2 className="serif text-2xl text-[#493628]">Settings</h2><button onClick={()=>setSettingsOpen(false)} aria-label="Close settings"><X/></button></div><MorePage email={session.user.email ?? ""} onSignOut={() => void signOut()} darkMode={darkMode} onToggleTheme={() => setDarkMode((value) => !value)}/></section></div>}
     <nav aria-label="Main navigation" className="bottom-safe fixed inset-x-0 bottom-0 z-20 border-t border-[#E8DDCF] bg-[#FFFCF7]/95 backdrop-blur">
       <div className="mx-auto grid max-w-xl grid-cols-5 px-2 pt-2">
         {navItems.map((item) => <button key={item.id} onClick={() => setPage(item.id)} aria-current={page === item.id ? "page" : undefined} className={"flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold " + (page === item.id ? "text-[#684B32]" : "text-[#735E49]")}><span className={"grid h-8 w-12 place-items-center rounded-full " + (page === item.id ? "bg-[#F0E4D4]" : "")}><NavGlyph name={item.icon}/></span>{item.label}</button>)}
